@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GooDraw — Ferramenta de Desenho Sobre Qualquer Página Web</title>
+  <link rel="icon" type="image/png" href="icons/icon48.png">
+  <style>
+    @font-face { font-family: 'Poppins'; font-weight: 400; src: url(fonts/poppins-500.woff2) format('woff2'); }
+    @font-face { font-family: 'Poppins'; font-weight: 600; src: url(fonts/poppins-700.woff2) format('woff2'); }
+    @font-face { font-family: 'Poppins'; font-weight: 700; src: url(fonts/poppins-700.woff2) format('woff2'); }
+    @font-face { font-family: 'Poppins'; font-weight: 800; src: url(fonts/poppins-800.woff2) format('woff2'); }
+
+    :root {
+      --bg: #0c0c20;
+      --card-bg: rgba(22, 22, 46, 0.75);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --accent-p: #5b4bff;
+      --accent-grad: linear-gradient(135deg, #4a4aff 0%, #8b3dff 100%);
+      --accent-hl: linear-gradient(135deg, #ffd43b 0%, #ff8a3d 100%);
+      --text-main: #ffffff;
+      --text-mute: #a9a9c8;
+      --paper-bg: #1c1c38;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(130% 90% at 50% -10%, #291c6e 0%, #15113d 40%, #0b0922 100%);
+      color: var(--text-main);
+      font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Aurora lights */
+    .sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .sky i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45; }
+    .sky .a { width: 50vw; height: 50vh; left: -10vw; top: -10vh; background: #6b5bff; }
+    .sky .b { width: 45vw; height: 50vh; right: -15vw; bottom: 20vh; background: #a855f7; }
+    .sky .c { width: 30vw; height: 30vh; left: 35vw; top: 40vh; background: #ff7a3d; opacity: 0.15; }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(12, 12, 32, 0.75);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 28px;
+    }
+    .nav-container {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none; color: inherit;
+    }
+    .brand img {
+      width: 40px; height: 40px; border-radius: 11px;
+      box-shadow: 0 4px 16px rgba(100, 70, 255, 0.45);
+    }
+    .brand-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-title span { color: #ffd43b; }
+
+    nav ul { display: flex; list-style: none; gap: 24px; align-items: center; }
+    nav a {
+      color: var(--text-mute); text-decoration: none; font-size: 14.5px; font-weight: 600;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: #fff; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 22px; border-radius: 99px; font-weight: 700; font-size: 14.5px;
+      cursor: pointer; text-decoration: none; border: none; transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent-grad); color: #fff;
+      box-shadow: 0 10px 24px -6px rgba(110, 70, 255, 0.6);
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.08); color: #fff;
+      border: 1px solid var(--card-border);
+    }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.16); transform: translateY(-2px); }
+    .btn-pulse {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    }
+
+    /* Hero section */
+    .hero {
+      position: relative; z-index: 2;
+      max-width: 1140px; margin: 50px auto 30px; padding: 0 24px;
+      text-align: center;
+    }
+    .badge-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 99px;
+      background: rgba(139, 61, 255, 0.2); border: 1px solid rgba(139, 61, 255, 0.45);
+      font-size: 13px; font-weight: 700; color: #d8b4fe; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(34px, 5.5vw, 56px); font-weight: 800; line-height: 1.15;
+      letter-spacing: -0.03em; margin-bottom: 20px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, #ffd43b, #ff8a3d, #a855f7);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero p {
+      max-width: 780px; margin: 0 auto 34px; font-size: 17.5px;
+      color: var(--text-mute); line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+
+    /* Interactive Live Exam Simulator */
+    .simulator-wrap {
+      position: relative; z-index: 2;
+      max-width: 1040px; margin: 0 auto 60px; padding: 0 20px;
+    }
+    .simulator-card {
+      background: var(--paper-bg);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+    }
+    .sim-bar {
+      background: rgba(10, 10, 26, 0.85);
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sim-tag {
+      font-size: 12px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 4px 10px; border-radius: 6px;
+      background: rgba(99, 102, 241, 0.25); color: #c7d2fe;
+    }
+    .sim-notice {
+      font-size: 13px; color: #ffd43b; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sim-body { padding: 32px 36px; }
+    .question-header {
+      display: flex; align-items: baseline; gap: 10px;
+      margin-bottom: 18px; color: #a5b4fc; font-size: 14px; font-weight: 700;
+    }
+    .question-statement {
+      font-size: 17px; line-height: 1.75; margin-bottom: 24px;
+      color: #f1f1f8; text-align: justify;
+    }
+    .question-statement mark {
+      background: rgba(253, 216, 53, 0.35); color: inherit; padding: 2px 4px; border-radius: 4px;
+    }
+    .sim-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .sim-opt {
+      display: flex; align-items: flex-start; gap: 14px; padding: 14px 18px;
+      border-radius: 14px; background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08); cursor: pointer;
+      transition: background 0.15s, border-color 0.15s; font-size: 15px;
+    }
+    .sim-opt:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
+    .sim-opt.selected { background: rgba(99, 102, 241, 0.2); border-color: #6366f1; }
+    .sim-opt.correct { background: rgba(34, 197, 94, 0.2); border-color: #22c55e; }
+    .opt-letter {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1); display: grid; place-items: center;
+      font-weight: 800; font-size: 13px; flex-shrink: 0; color: #fff;
+    }
+    .sim-opt.selected .opt-letter { background: #6366f1; }
+    .sim-opt.correct .opt-letter { background: #22c55e; }
+    .sim-footer-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 20px;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .sim-buttons-group { display: flex; gap: 8px; }
+    .sim-btn-action {
+      padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.06);
+      color: #fff; cursor: pointer; transition: 0.15s;
+    }
+    .sim-btn-action:hover { background: rgba(255, 255, 255, 0.14); }
+
+    /* Features Grid */
+    .section {
+      position: relative; z-index: 2;
+      max-width: 1140px; margin: 70px auto; padding: 0 24px;
+    }
+    .section-title {
+      text-align: center; margin-bottom: 40px;
+    }
+    .section-title h2 {
+      font-size: clamp(28px, 4vw, 38px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px;
+    }
+    .section-title p { color: var(--text-mute); font-size: 16px; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 26px;
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); border-color: rgba(255, 255, 255, 0.3); }
+    .feat-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: grid; place-items: center; font-size: 24px; margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .feat-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .feat-desc { font-size: 14px; color: var(--text-mute); line-height: 1.6; }
+
+    /* Table of Shortcuts */
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px; overflow: hidden;
+      backdrop-filter: blur(12px); margin-top: 20px;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 14px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 14px; }
+    th { background: rgba(0, 0, 0, 0.25); color: #c4b5fd; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; }
+    tr:last-child td { border-bottom: none; }
+    kbd {
+      display: inline-block; padding: 4px 8px; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25);
+      font-family: monospace; font-size: 12.5px; font-weight: 700; color: #ffd43b;
+    }
+
+    /* Steps */
+    .step-card {
+      display: flex; gap: 18px; align-items: flex-start;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 18px; padding: 22px;
+    }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent-grad); color: #fff; font-weight: 800; font-size: 18px;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .step-content h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .step-content p { font-size: 13.5px; color: var(--text-mute); }
+
+    footer {
+      border-top: 1px solid var(--card-border);
+      background: rgba(10, 10, 24, 0.9);
+      padding: 40px 24px; text-align: center; color: var(--text-mute); font-size: 14px;
+      position: relative; z-index: 2; margin-top: 80px;
+    }
+    footer a { color: #a5b4fc; text-decoration: none; }
+
+    @media (max-width: 860px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      nav ul { display: none; }
+      .sim-body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sky" aria-hidden="true">
+  <i class="a"></i><i class="b"></i><i class="c"></i>
+</div>
+
+<header>
+  <div class="nav-container">
+    <a href="#" class="brand">
+      <img src="icons/icon128.png" alt="GooDraw">
+      <div class="brand-title">Goo<span>Draw</span></div>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="#ferramentas">Ferramentas</a></li>
+        <li><a href="#highlights">Highlights</a></li>
+        <li><a href="#atalhos">Atalhos</a></li>
+        <li><a href="#instalacao">Como Instalar</a></li>
+        <li><a href="dashboard.html" style="color: #38bdf8;">☁️ Cloud Dashboard</a></li>
+      </ul>
+    </nav>
+    <button class="btn btn-pulse" id="btnToggleDemo">
+      ✏️ Abrir Barra na Tela
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="badge-pill">
+      ✨ 2 ferramentas em 1 única extensão: Draw + Highlights
+    </div>
+    <h1>Desenhe e grife sobre<br><em>qualquer página web</em></h1>
+    <p>
+      Resolver questão é leitura atenta: você sublinha o <strong>"exceto"</strong>, circula o dado que muda tudo,
+      risca a alternativa que já caiu. No papel isso é automático. Na tela, com <strong>GooDraw</strong>, também.
+      Os traços ficam presos ao texto: você rola a página e eles rolam junto.
+    </p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="triggerDrawBar()">
+        ✏️ Testar Agora Nesta Página
+      </button>
+      <a href="dashboard.html" class="btn" style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; box-shadow: 0 8px 20px -4px rgba(6,182,212,0.5);">
+        ☁️ Acessar Nuvem (PC / Celular / Tablet)
+      </a>
+      <a href="#instalacao" class="btn btn-outline">
+        📦 Como Instalar no Chrome / Edge
+      </a>
+    </div>
+  </section>
+
+  <!-- Interactive Live Exam Simulator -->
+  <section class="simulator-wrap" id="simulador">
+    <div class="simulator-card">
+      <div class="sim-bar">
+        <span class="sim-tag">Simulador de Questão • TEC / Qconcursos</span>
+        <div class="sim-notice">
+          💡 Dica: ative a barra de desenho acima para riscar as alternativas falsas!
+        </div>
+      </div>
+      <div class="sim-body">
+        <div class="question-header">
+          <span>Direito Administrativo • Licitações e Contratos • Lei nº 14.133/2021</span>
+          <span style="margin-left: auto;">Ano: 2026 • Banca: FGV</span>
+        </div>
+        <div class="question-statement">
+          No que concerne às modalidades de licitação e critérios de julgamento estabelecidos na 
+          Nova Lei de Licitações (Lei nº 14.133/2021), assinale a alternativa <strong>CORRETA</strong>:
+        </div>
+        <div class="sim-options">
+          <div class="sim-opt" onclick="selectOption(this, false)">
+            <span class="opt-letter">A</span>
+            <div>A tomada de preços e o convite permanecem vigentes como modalidades prioritárias para compras de pequeno valor.</div>
+          </div>
+          <div class="sim-opt" onclick="selectOption(this, false)">
+            <span class="opt-letter">B</span>
+            <div>O diálogo competitivo é vedado para contratações que envolvam inovação tecnológica ou técnica complexa.</div>
+          </div>
+          <div class="sim-opt" onclick="selectOption(this, true)">
+            <span class="opt-letter">C</span>
+            <div>O pregão é obrigatório para a aquisição de bens e serviços comuns, cujo critério de julgamento poderá ser o de menor preço ou o de maior desconto.</div>
+          </div>
+          <div class="sim-opt" onclick="selectOption(this, false)">
+            <span class="opt-letter">D</span>
+            <div>A concorrência não admite a adoção do critério de julgamento por melhor técnica e preço ou maior retorno econômico.</div>
+          </div>
+          <div class="sim-opt" onclick="selectOption(this, false)">
+            <span class="opt-letter">E</span>
+            <div>O leilão pode ser utilizado indistintamente para a alienação de quaisquer bens, bem como para contratação de obras de engenharia.</div>
+          </div>
+        </div>
+        <div class="sim-footer-bar">
+          <div class="sim-buttons-group">
+            <button class="sim-btn-action" onclick="checkAnswer()">Responder</button>
+            <button class="sim-btn-action" onclick="toggleComments()">Professor (Alt+C)</button>
+            <button class="sim-btn-action" onclick="toggleStats()">Estatísticas</button>
+          </div>
+          <span id="feedbackText" style="font-weight:700; font-size:14px; color:#4ade80;"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="section" id="ferramentas">
+    <div class="section-title">
+      <h2>As Ferramentas de Desenho</h2>
+      <p>Desenvolvidas por concurseiros, exatamente para a rotina de estudos pesada.</p>
+    </div>
+    <div class="grid-3">
+      <div class="feature-card">
+        <div class="feat-icon">✏️</div>
+        <div class="feat-title">Lápis Livre</div>
+        <div class="feat-desc">Traço fluido para sublinhar, circular e anotar do jeito que sua mão pede. Fiel ao movimento do mouse ou da caneta stylus.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🖍️</div>
+        <div class="feat-title">Marcador Translúcido</div>
+        <div class="feat-desc">Marca-texto com modo livre ou modo régua reta automática. O texto continua 100% legível por baixo da cor.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">╱ ▢ ◯</div>
+        <div class="feat-title">Formas Geométricas</div>
+        <div class="feat-desc">Linhas retas, retângulos e círculos perfeitos para delimitar trechos importantes, tabelas e prazos num piscar de olhos.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🗒️</div>
+        <div class="feat-title">Post-it de Texto</div>
+        <div class="feat-desc">Cole notas de texto em qualquer ponto da questão com fonte customizada, notas de rodapé e alertas de memorização.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🔴</div>
+        <div class="feat-title">Laser Apontador</div>
+        <div class="feat-desc">Traço luminoso com rastro suave que desaparece automaticamente segundos depois. Perfeito para videoaulas e monitorias.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🧽</div>
+        <div class="feat-title">Borracha Inteligente</div>
+        <div class="feat-desc">Apague o traço inteiro com um simples toque ou use o modo pincel apagador. Clique no botão do meio do mouse para limpar tudo.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">📷</div>
+        <div class="feat-title">Captura de Área</div>
+        <div class="feat-desc">Recorte a questão com todas as suas anotações e envie direto para a área de transferência pronta para colar no Word, Anki ou Notion.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🧮</div>
+        <div class="feat-title">Calculadora Integrada</div>
+        <div class="feat-desc">Abre flutuante por cima da questão de exatas ou contabilidade sem precisar trocar de aba nem abrir o app do Windows.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-title">Atalhos de Questão</div>
+        <div class="feat-desc">Barra de resposta rápida com teclas A a E, C/E, Próxima e comentários mapeados para os atalhos nativos do TEC Concursos.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Highlights Section -->
+  <section class="section" id="highlights">
+    <div class="section-title">
+      <h2>GooHighlights</h2>
+      <p>Grifos inteligentes com persistência automática em qualquer página web ou lei seca.</p>
+    </div>
+    <div class="grid-2">
+      <div class="feature-card">
+        <div class="feat-icon" style="background:rgba(255,212,59,0.15); border-color:rgba(255,212,59,0.3); color:#ffd43b;">🖍️</div>
+        <div class="feat-title">Grifo com Persistência Local e Nuvem</div>
+        <div class="feat-desc">Selecione o texto e marque com uma das 6 cores ou oculte trechos irrelevantes. Quando você reabre a página semanas depois, todos os seus grifos continuam no mesmo local.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon" style="background:rgba(168,85,247,0.15); border-color:rgba(168,85,247,0.3); color:#c084fc;">🔗</div>
+        <div class="feat-title">Ligação Entre Trechos e Caderno de Erros</div>
+        <div class="feat-desc">Conecte artigos correlatos da mesma página ou de leis diferentes com hiperlinks bidirecionais. Adicione imagens com Ctrl+V e exporte resumos em Markdown com Alt+W.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shortcuts Section -->
+  <section class="section" id="atalhos">
+    <div class="section-title">
+      <h2>Atalhos de Teclado (Com tecla Alt)</h2>
+      <p>Configurados para não conflitar com os atalhos nativos dos sites de questões.</p>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Atalho</th>
+            <th>Ferramenta / Ação</th>
+            <th>Descrição</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><kbd>Alt + S</kbd></td>
+            <td><strong>Lápis</strong></td>
+            <td>Ativa o desenho à mão livre</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + D</kbd></td>
+            <td><strong>Marcador</strong></td>
+            <td>Ativa o marca-texto (toque 2x para modo régua reta)</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + K</kbd></td>
+            <td><strong>Laser</strong></td>
+            <td>Ponteiro com desaparecimento automático</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + L</kbd></td>
+            <td><strong>Borracha</strong></td>
+            <td>Modo apagar traços</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + C</kbd></td>
+            <td><strong>Desfazer</strong></td>
+            <td>Desfaz a última ação realizada</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + M</kbd></td>
+            <td><strong>Limpar Tudo</strong></td>
+            <td>Limpa todas as anotações da tela atual</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + B</kbd></td>
+            <td><strong>Captura Total</strong></td>
+            <td>Captura de tela com desenhos inclusos</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + Shift + B</kbd></td>
+            <td><strong>Recorte de Área</strong></td>
+            <td>Seleciona área retangular para copiar ao clipboard</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + N</kbd></td>
+            <td><strong>Calculadora</strong></td>
+            <td>Abre ou fecha a calculadora flutuante</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + Q</kbd></td>
+            <td><strong>Marcador Rápido</strong></td>
+            <td>Grifa a seleção atual imediatamente com a última cor</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt + W</kbd></td>
+            <td><strong>Painel Lateral</strong></td>
+            <td>Abre o painel com todas as marcações da página</td>
+          </tr>
+          <tr>
+            <td><kbd>Botão do Meio</kbd></td>
+            <td><strong>Limpeza Imediata</strong></td>
+            <td>Clique na rodinha do mouse para limpar a tela inteira</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Installation Steps -->
+  <section class="section" id="instalacao">
+    <div class="section-title">
+      <h2>Como Instalar a Extensão no seu Navegador</h2>
+      <p>Funciona no Google Chrome, Microsoft Edge, Brave, Opera e qualquer navegador Chromium.</p>
+    </div>
+    <div class="grid-2">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Abra a aba de Extensões</h4>
+          <p>No Chrome ou Edge, digite <code>chrome://extensions</code> na barra de endereços e aperte Enter.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Ative o Modo do Desenvolvedor</h4>
+          <p>Localize a chave seletora <strong>"Modo do desenvolvedor"</strong> no canto superior direito da página e ative-a.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Carregar sem compactação</h4>
+          <p>Clique no botão <strong>"Carregar sem compactação"</strong> (Load unpacked) que surgiu no canto superior esquerdo.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Selecione a pasta recriada</h4>
+          <p>Navegue até a pasta <code>agoodraw-draw-extension</code> deste projeto e confirme a seleção. A extensão será instalada imediatamente!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>
+    <strong>GooDraw</strong> — Projeto independente de alta performance para concurseiros e estudantes.<br>
+    Compatível com TEC Concursos, Qconcursos, Gran Questões e qualquer página da web.
+  </p>
+</footer>
+
+<!-- Interactive Scripts -->
+<script>
+  let selectedOpt = null;
+  function selectOption(el, isCorrect) {
+    document.querySelectorAll('.sim-opt').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedOpt = isCorrect;
+  }
+  function checkAnswer() {
+    const feedback = document.getElementById('feedbackText');
+    if (selectedOpt === null) {
+      feedback.style.color = '#fbbf24';
+      feedback.textContent = 'Por favor, selecione uma alternativa antes de responder.';
+      return;
+    }
+    if (selectedOpt) {
+      feedback.style.color = '#4ade80';
+      feedback.textContent = '🎉 Parabéns! Resposta Correta (C). Art. 6º, XLI e Art. 34 da Lei 14.133/21.';
+    } else {
+      feedback.style.color = '#f87171';
+      feedback.textContent = '❌ Alternativa Incorreta. Revise o tema e risque a alternativa com o lápis!';
+    }
+  }
+  function toggleComments() {
+    alert("Comentário do Professor:\\n\\nA alternativa C está correta! Conforme o art. 6º, XLI e art. 34 da Nova Lei de Licitações (Lei 14.133/21), o pregão é obrigatório para aquisição de bens e serviços comuns, cujo critério de julgamento poderá ser de menor preço ou de maior desconto.");
+  }
+  function toggleStats() {
+    alert("Estatísticas da Questão:\\n\\n• 84% de acertos\\n• Alternativa C mais assinalada (84%)\\n• 12% marcaram A\\n• 4% marcaram outras alternativas");
+  }
+
+  // Load Draw content script dynamically
+  function triggerDrawBar() {
+    if (window.__pdToggle) {
+      window.__pdToggle();
+    } else {
+      const s = document.createElement('script');
+      s.src = 'content.js';
+      s.onload = () => {
+        console.log('GooDraw toolbar loaded.');
+      };
+      document.body.appendChild(s);
+    }
+  }
+
+  document.getElementById('btnToggleDemo').addEventListener('click', triggerDrawBar);
+</script>
+
+</body>
+</html>
