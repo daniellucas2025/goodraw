@@ -251,6 +251,65 @@
       return this.getLocalScreenshots(options);
     }
 
+    async deleteScreenshot(idOrCreated) {
+      try {
+        const key = 'goodraw_local_shots';
+        let list = JSON.parse(localStorage.getItem(key) || '[]');
+        list = list.filter(s => (s.id && s.id !== idOrCreated) && s.created_at !== idOrCreated);
+        localStorage.setItem(key, JSON.stringify(list));
+      } catch (e) {}
+
+      if (!this.isConfigured() || !idOrCreated) return { ok: true };
+
+      try {
+        let endpoint = `${this.config.url}/rest/v1/screenshots?id=eq.${encodeURIComponent(idOrCreated)}`;
+        const res = await fetch(endpoint, {
+          method: 'DELETE',
+          headers: this.getAuthHeader()
+        });
+        return { ok: res.ok };
+      } catch (e) {
+        console.warn('[SupabaseSync] Erro ao deletar screenshot na nuvem:', e);
+        return { ok: false, error: e };
+      }
+    }
+
+    async deleteHighlight(id) {
+      if (!this.isConfigured() || !id) return { ok: true };
+      try {
+        const res = await fetch(`${this.config.url}/rest/v1/highlights?id=eq.${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: this.getAuthHeader()
+        });
+        return { ok: res.ok };
+      } catch (e) {
+        return { ok: false, error: e };
+      }
+    }
+
+    async clearAllData() {
+      try {
+        localStorage.removeItem('goodraw_local_shots');
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('goodraw_')) localStorage.removeItem(k);
+        }
+      } catch (e) {}
+
+      if (!this.isConfigured()) return { ok: true };
+
+      try {
+        await Promise.all([
+          fetch(`${this.config.url}/rest/v1/screenshots?id=neq.00000000-0000-0000-0000-000000000000`, { method: 'DELETE', headers: this.getAuthHeader() }),
+          fetch(`${this.config.url}/rest/v1/highlights?id=neq.00000000-0000-0000-0000-000000000000`, { method: 'DELETE', headers: this.getAuthHeader() }),
+          fetch(`${this.config.url}/rest/v1/drawings?id=neq.00000000-0000-0000-0000-000000000000`, { method: 'DELETE', headers: this.getAuthHeader() })
+        ]);
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: e };
+      }
+    }
+
     // ──────────────────────── GRIFOS & HIGHLIGHTS ────────────────────────
     async saveHighlight({ url, quote, color = 'yellow', note = '', anchorData = {} }) {
       const record = {

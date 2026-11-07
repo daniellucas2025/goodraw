@@ -3626,10 +3626,10 @@
   // silences that phase only, so whoever silenced the list still hears when
   // the offers open. ✕ closes it for this time.
   const BF_OPEN = Date.parse('2026-11-06T00:00:00-03:00'), BF_END = Date.parse('2026-11-20T23:59:59-03:00');
-  const bfPhase = () => { const t = Date.now(); return t < BF_OPEN ? 'pre' : t <= BF_END ? 'live' : ''; };
+  const bfPhase = () => '';
   let bfHidden = '';   // the id of the phase silenced (persisted)
   let bfRef = null;
-  function showBfCard() {
+  function showBfCard() { return;
     const phase = bfPhase(), id = 'bf2026-' + phase;
     if (PD_ENV !== 'extension' || !phase || bfHidden === id || bfRef) return;
     const page = { es: '/es/black-friday.html', fr: '/fr/black-friday.html' }[PD_LANG] || '/black-friday';

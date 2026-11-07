@@ -293,13 +293,13 @@
     if (t.id === 'hlDockHide') { chrome.storage.local.set({ hlDockHide: t.checked }); return; }
     if (t.closest('#hlGo') || t.closest('[data-open="hl"]')) { openHighlights(); return; }
     // GooDraw Flashcards and Planner: their screens in the site's app.
-    if (t.closest('#fcGo')) { send({ action: 'hl.app', hash: '#/flashcards' }); return; }
+    if (t.closest("#fcGo")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#flashcards"); return; }
     // The Notes: its page on the site (what it is, free and Premium), in a new tab, in the home's language.
-    if (t.closest('#notesGo') || t.closest('[data-open="notes"]')) { openTab('https://www.agoodrawdraw.com.br/' + (lang === 'es' || lang === 'fr' ? lang + '/' : '') + 'notes/'); return; }
-    if (t.closest('#plGo')) { send({ action: 'hl.app', hash: '#/planejamento' }); return; }
-    if (t.closest('#android')) { openTab(URLS.android); return; }
+    if (t.closest("#notesGo") || t.closest('[data-open="notes"]')) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html"); return; }
+    if (t.closest("#plGo")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#planner"); return; }
+    if (t.closest("#android")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#app"); return; }
     // Chamados: the Notes' form, with this page and the extension's version (background.js).
-    if (t.closest('#ticketGo')) { send({ action: 'ticket.open', url: pageUrl, tool: '' }); closeHome(); return; }
+    if (t.closest("#ticketGo")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html"); closeHome(); return; }
     const s = t.closest('[data-s]');
     if (s) openTab(s.dataset.s === 'rate' ? rateUrl(lang) : URLS[s.dataset.s]);
   });

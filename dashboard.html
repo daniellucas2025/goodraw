@@ -319,6 +319,15 @@
         <li class="nav-item" data-view="grifos">
           <span class="nav-icon">🖍️</span> Grifos de Leis
         </li>
+        <li class="nav-item" data-view="flashcards">
+          <span class="nav-icon">🗂️</span> Flashcards
+        </li>
+        <li class="nav-item" data-view="planner">
+          <span class="nav-icon">📅</span> Planner & Timer
+        </li>
+        <li class="nav-item" data-view="app">
+          <span class="nav-icon">📱</span> App Celular & Tablet
+        </li>
       </ul>
 
       <div class="cloud-status-box">
@@ -341,9 +350,10 @@
             <p>Seus dados salvos no Supabase, sincronizados em qualquer tela.</p>
           </div>
           <div class="header-actions">
-            <a href="../goodraw-site/index.html" class="btn btn-secondary" style="text-decoration:none;">✏️ Simulador Web</a>
-            <button class="btn btn-secondary" onclick="syncNow()">🔄 Sincronizar Agora</button>
-            <button class="btn btn-primary" onclick="loadSampleData()">➕ Adicionar Exemplo</button>
+            <a href="index.html" class="btn btn-secondary" style="text-decoration:none;">✏️ Simulador Web</a>
+            <button class="btn btn-primary" id="btnAuthAccount" onclick="openAuthModal()">👤 Minha Conta</button>
+            <button class="btn btn-secondary" onclick="syncNow()">🔄 Sincronizar</button>
+            <button class="btn btn-secondary" onclick="confirmClearAll()" style="color:#f87171; border-color:rgba(248,113,113,0.35);">🗑️ Excluir Tudo</button>
           </div>
         </div>
 
@@ -410,6 +420,53 @@
         <div id="grifosList" style="display: flex; flex-direction: column; gap: 14px;"></div>
       </section>
 
+    
+      <!-- VIEW: FLASHCARDS -->
+      <section id="view-flashcards" style="display: none;">
+        <div class="view-header">
+          <div class="view-title">
+            <h1>Flashcards com Repetição Espaçada</h1>
+            <p>Seus recortes de questões transformados em cards interativos para estudo ativo.</p>
+          </div>
+        </div>
+        <div class="cards-grid" id="flashcardsGrid"></div>
+      </section>
+
+      <!-- VIEW: PLANNER -->
+      <section id="view-planner" style="display: none;">
+        <div class="view-header">
+          <div class="view-title">
+            <h1>Planejamento & Timer de Estudos</h1>
+            <p>Foco total na resolução de questões com técnica Pomodoro.</p>
+          </div>
+        </div>
+        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:20px; padding:36px; text-align:center; max-width:600px; margin:0 auto;">
+          <div style="font-size:72px; font-weight:800; font-family:monospace; color:#38bdf8; margin-bottom:20px;" id="timerDisplay">25:00</div>
+          <div style="display:flex; justify-content:center; gap:14px;">
+            <button class="btn btn-primary" onclick="toggleTimer()" id="btnTimer" style="min-width:140px;">▶ Iniciar</button>
+            <button class="btn btn-secondary" onclick="resetTimer()">↺ Reiniciar</button>
+          </div>
+          <p style="color:var(--text-mute); font-size:14px; margin-top:20px;">Ciclo ativo: 25 min de estudo com questões e 5 min de intervalo.</p>
+        </div>
+      </section>
+
+      <!-- VIEW: APP CELULAR & TABLET -->
+      <section id="view-app" style="display: none;">
+        <div class="view-header">
+          <div class="view-title">
+            <h1>GooDraw no Celular e Tablet</h1>
+            <p>Acesse em qualquer tela com sincronização contínua na nuvem.</p>
+          </div>
+        </div>
+        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:20px; padding:28px; line-height:1.8; max-width:700px;">
+          <h3 style="margin-bottom:12px; color:#38bdf8; font-size:18px;">📲 Como instalar como App (PWA) no Celular e Tablet:</h3>
+          <p>1. No <strong>Chrome, Edge ou Safari</strong> do seu celular ou tablet, abra esta página.</p>
+          <p>2. Toque no botão de <strong>três pontos (⋮)</strong> ou no ícone de <strong>Compartilhar</strong>.</p>
+          <p>3. Toque em <strong>"Adicionar à tela de início"</strong> ou <strong>"Instalar aplicativo"</strong>.</p>
+          <p>4. Pronto! O ícone do GooDraw aparecerá na tela do seu aparelho como um app nativo, sem ocupar memória e com suporte a toque e caneta stylus.</p>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -434,7 +491,10 @@
       dashboard: document.getElementById('view-dashboard'),
       caderno: document.getElementById('view-caderno'),
       prints: document.getElementById('view-prints'),
-      grifos: document.getElementById('view-grifos')
+      grifos: document.getElementById('view-grifos'),
+      flashcards: document.getElementById('view-flashcards'),
+      planner: document.getElementById('view-planner'),
+      app: document.getElementById('view-app')
     };
 
     navItems.forEach(item => {
@@ -488,7 +548,31 @@
         gridRecent.innerHTML = '<p style="color:var(--text-mute); grid-column: 1/-1;">Nenhuma questão ou print registrado ainda. Use a ferramenta de recorte na página para salvar!</p>';
       }
 
+      
+      const gridFc = document.getElementById('flashcardsGrid');
+      if (gridFc) gridFc.innerHTML = '';
       shots.forEach(s => {
+        if (gridFc) {
+          const fc = document.createElement('div');
+          fc.className = 'capture-card';
+          fc.innerHTML = `
+            <div class="card-thumb" onclick="openImageModal('${s.title.replace(/'/g, "\\'")}', '${s.image_url}')">
+              <img src="${s.image_url}" alt="${s.title}">
+              <span class="card-badge">🗂️ Flashcard</span>
+            </div>
+            <div class="card-content">
+              <div class="card-title">${s.title}</div>
+              <div class="card-note">${s.note || 'Clique no print para ampliar e resolver.'}</div>
+              <div class="card-footer">
+                <span>Frente: Pergunta / Verso: Resposta</span>
+                <button onclick="deleteCard('${s.id || s.created_at}', event)" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:2px 8px; border-radius:6px; cursor:pointer; font-size:11px;">🗑️ Excluir</button>
+              </div>
+            </div>
+          `;
+          gridFc.appendChild(fc);
+        }
+        // Render normal
+
         const card = createCardEl(s);
         gridPrints.appendChild(card.cloneNode(true));
         if (s.is_error_notebook) gridCaderno.appendChild(card.cloneNode(true));
@@ -527,7 +611,10 @@
           <div class="card-tags">${tagsHtml}</div>
           <div class="card-footer">
             <span>${new Date(s.created_at).toLocaleDateString('pt-BR')}</span>
-            <a href="${s.url}" target="_blank" style="color:#a5b4fc; text-decoration:none;">🔗 Abrir Questão</a>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <a href="${s.url}" target="_blank" style="color:#a5b4fc; text-decoration:none;">🔗 Abrir</a>
+              <button onclick="deleteCard('${s.id || s.created_at}', event)" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:3px 9px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;" title="Excluir este item da nuvem">🗑️ Excluir</button>
+            </div>
           </div>
         </div>
       `;
@@ -570,10 +657,211 @@
       alert('Sincronização concluída com o Supabase!');
     }
 
+    
+    // ──────────────────────── EXCLUSÃO DE DADOS ────────────────────────
+    async function deleteCard(idOrDate, e) {
+      if (e) e.stopPropagation();
+      if (!confirm('Deseja realmente excluir este print/questão da nuvem?')) return;
+      await sync.deleteScreenshot(idOrDate);
+      await renderAll();
+    }
+
+    async function deleteHl(id, e) {
+      if (e) e.stopPropagation();
+      if (!confirm('Deseja excluir este grifo?')) return;
+      await sync.deleteHighlight(id);
+      await renderAll();
+    }
+
+    async function confirmClearAll() {
+      if (!confirm('⚠️ ATENÇÃO: Tem certeza que deseja apagar TODOS os seus prints, caderno de erros e anotações do site e do Supabase?\n\nEsta ação é definitiva.')) return;
+      await sync.clearAllData();
+      await renderAll();
+      alert('Todos os dados foram excluídos com sucesso!');
+    }
+
+    // ──────────────────────── CONTA & PAREAMENTO (IMAGENS 1 E 2) ────────────────────────
+    let authMode = 'signup';
+    function openAuthModal(code = '') {
+      document.getElementById('authModal').classList.add('open');
+      if (code) {
+        document.getElementById('authPairCode').value = code;
+      }
+    }
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.remove('open');
+    }
+    function setAuthMode(mode) {
+      authMode = mode;
+      document.getElementById('tabAuthSignup').className = mode === 'signup' ? 'btn btn-primary' : 'btn btn-secondary';
+      document.getElementById('tabAuthLogin').className = mode === 'login' ? 'btn btn-primary' : 'btn btn-secondary';
+      document.getElementById('btnSubmitAuth').textContent = mode === 'signup' ? 'Criar Conta Grátis' : 'Entrar na Conta';
+      document.getElementById('groupPairCode').style.display = mode === 'signup' ? 'block' : 'none';
+      document.getElementById('authResult').textContent = '';
+    }
+
+    async function submitAuth() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      const pairCode = document.getElementById('authPairCode').value.trim();
+      const resEl = document.getElementById('authResult');
+
+      if (!email || !password) {
+        resEl.style.color = '#f87171';
+        resEl.textContent = 'Por favor, preencha e-mail e senha.';
+        return;
+      }
+
+      resEl.style.color = '#fbbf24';
+      resEl.textContent = 'Conectando ao Supabase...';
+
+      try {
+        if (authMode === 'signup') {
+          await sync.signUp(email, password);
+          resEl.style.color = '#34d399';
+          resEl.textContent = 'Conta criada com sucesso! Sincronizando...';
+        } else {
+          await sync.signIn(email, password);
+          resEl.style.color = '#34d399';
+          resEl.textContent = 'Login realizado com sucesso!';
+        }
+        setTimeout(() => {
+          closeAuthModal();
+          checkUserAuth();
+          renderAll();
+        }, 1000);
+      } catch (err) {
+        resEl.style.color = '#f87171';
+        resEl.textContent = err.message || 'Erro ao conectar conta';
+      }
+    }
+
+    function checkUserAuth() {
+      const user = sync.getUser();
+      const btn = document.getElementById('btnAuthAccount');
+      if (btn) {
+        if (user && user.email) {
+          btn.textContent = '👤 ' + user.email.split('@')[0];
+          btn.title = 'Conectado como: ' + user.email;
+        } else {
+          btn.textContent = '👤 Criar Conta / Entrar';
+        }
+      }
+    }
+
+    // ──────────────────────── TIMER POMODORO ────────────────────────
+    let timerSecs = 25 * 60;
+    let timerInterval = null;
+    function updateTimerDisplay() {
+      const m = Math.floor(timerSecs / 60).toString().padStart(2, '0');
+      const s = (timerSecs % 60).toString().padStart(2, '0');
+      const el = document.getElementById('timerDisplay');
+      if (el) el.textContent = `${m}:${s}`;
+    }
+    function toggleTimer() {
+      const btn = document.getElementById('btnTimer');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if (btn) btn.textContent = '▶ Continuar';
+      } else {
+        if (btn) btn.textContent = '⏸ Pausar';
+        timerInterval = setInterval(() => {
+          if (timerSecs > 0) {
+            timerSecs--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            alert('⏰ Ciclo concluído! Faça uma pausa de 5 minutos.');
+            resetTimer();
+          }
+        }, 1000);
+      }
+    }
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerSecs = 25 * 60;
+      updateTimerDisplay();
+      const btn = document.getElementById('btnTimer');
+      if (btn) btn.textContent = '▶ Iniciar';
+    }
+
+    // ──────────────────────── ROTEAMENTO DE HASH ────────────────────────
+    function switchView(viewName) {
+      navItems.forEach(n => {
+        n.classList.toggle('active', n.dataset.view === viewName);
+      });
+      Object.keys(sections).forEach(k => {
+        if (sections[k]) sections[k].style.display = k === viewName ? 'block' : 'none';
+      });
+    }
+
+    function handleHashRoute() {
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#/conectar/')) {
+        const code = hash.replace('#/conectar/', '').trim();
+        openAuthModal(code);
+      } else if (hash.includes('flashcards')) {
+        switchView('flashcards');
+      } else if (hash.includes('planner') || hash.includes('planejamento')) {
+        switchView('planner');
+      } else if (hash.includes('app')) {
+        switchView('app');
+      } else if (hash.includes('grifos') || hash.includes('/m')) {
+        switchView('grifos');
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashRoute);
+
     window.addEventListener('DOMContentLoaded', () => {
+      checkUserAuth();
+      handleHashRoute();
+
       updateStatusIndicator();
       renderAll();
     });
   </script>
+
+  <!-- Modal de Conta / Login / Pareamento (Imagens 1 e 2) -->
+  <div class="modal-overlay" id="authModal" onclick="closeAuthModal()">
+    <div class="modal-box" style="max-width:480px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="authModalTitle" style="font-size: 17px; font-weight:800;">Guarde tudo na sua conta 100% grátis</h3>
+        <button class="btn btn-secondary" style="padding: 4px 12px;" onclick="closeAuthModal()">✕</button>
+      </div>
+      <div style="padding: 24px;">
+        <p style="color:var(--text-mute); font-size:13.5px; margin-bottom:16px;">
+          ✓ 100% grátis e ilimitado, sem cartão.<br>
+          ✓ Em qualquer computador, celular ou tablet.<br>
+          ✓ Sincronização contínua com seu banco Supabase.
+        </p>
+        <div style="display:flex; gap:10px; margin-bottom:18px;">
+          <button class="btn btn-primary" id="tabAuthSignup" style="flex:1;" onclick="setAuthMode('signup')">Criar conta grátis</button>
+          <button class="btn btn-secondary" id="tabAuthLogin" style="flex:1;" onclick="setAuthMode('login')">Já tenho conta</button>
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="authEmail" class="form-control" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="authPassword" class="form-control" placeholder="Sua senha">
+        </div>
+        <div class="form-group" id="groupPairCode">
+          <label>Código de Pareamento da Extensão (Opcional)</label>
+          <input type="text" id="authPairCode" class="form-control" placeholder="Ex: 3A7 - QFG" style="font-family:monospace; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">
+          <div class="help-text">Vincule a extensão ao seu painel instantaneamente.</div>
+        </div>
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" id="btnSubmitAuth" style="width:100%;" onclick="submitAuth()">Criar Conta Grátis</button>
+        </div>
+        <div id="authResult" style="margin-top:14px; font-size:13.5px; font-weight:700; text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
