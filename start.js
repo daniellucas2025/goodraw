@@ -73,7 +73,7 @@
       why1: 'Le crayon de la Draw et le menu de couleurs de la Highlights fonctionnent sur n\'importe quel site.', why2: 'La capture partielle et les annotations à la main fonctionnent sur n\'importe quelle page.', why3: 'Rien de ce que vous lisez n\'est envoyé : seul ce que vous marquez va dans votre compte.', confirm: 'Confirmer'
     }
   };
-  const WELCOME_VIDEO = 'https://www.youtube.com/watch?v=MhcONbWSRZo';
+  const WELCOME_VIDEO = '';
   const ALL_SITES = ['<all_urls>'];
   let L = STR.pt, lang = 'pt';
   const view = document.getElementById('view');
@@ -151,7 +151,7 @@
     if (lang === 'pt') chrome.storage.local.get('bnWelcomeVideo', p => {
       if (p.bnWelcomeVideo) return;
       chrome.storage.local.set({ bnWelcomeVideo: true });
-      chrome.tabs.create({ url: WELCOME_VIDEO });
+      // welcome video removed
     });
     view.onclick = e => {
       const o = e.target.closest('[data-open]');

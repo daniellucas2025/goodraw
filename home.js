@@ -82,7 +82,7 @@
   const firefox = typeof browser !== 'undefined' && /Firefox\//.test(navigator.userAgent);
   const URLS = {
     instagram: 'https://www.instagram.com/agoodrawdraw/',
-    youtube: 'https://www.youtube.com/@agoodrawdraw',
+    youtube: '',
     android: 'https://play.google.com/store/apps/details?id=com.agoodraw.draw',
   };
   const rateUrl = lang => firefox
