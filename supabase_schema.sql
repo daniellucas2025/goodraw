@@ -123,11 +123,12 @@ CREATE POLICY "Users can manage their study notes"
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
--- Permitir acesso público/anônimo se desejar modo sem login com client ID anônimo
--- (Descomente abaixo para permitir testes anônimos compartilhados com anon key)
--- CREATE POLICY "Anon drawings access" ON public.drawings FOR ALL TO anon USING (true) WITH CHECK (true);
--- CREATE POLICY "Anon screenshots access" ON public.screenshots FOR ALL TO anon USING (true) WITH CHECK (true);
--- CREATE POLICY "Anon highlights access" ON public.highlights FOR ALL TO anon USING (true) WITH CHECK (true);
+-- Permitir acesso via Anon Key (Uso pessoal direto sem necessidade de tela de login)
+CREATE POLICY "Anon drawings access" ON public.drawings FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Anon screenshots access" ON public.screenshots FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Anon highlights access" ON public.highlights FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Anon study_pages access" ON public.study_pages FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Anon study_notes access" ON public.study_notes FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- ==============================================================================
 -- STORAGE BUCKET PARA PRINTS & IMAGENS
@@ -140,6 +141,6 @@ CREATE POLICY "Public Access for Screenshots"
     ON storage.objects FOR SELECT
     USING (bucket_id = 'study_screenshots');
 
-CREATE POLICY "Authenticated users can upload screenshots"
+CREATE POLICY "Upload screenshots policy"
     ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'study_screenshots' AND auth.role() = 'authenticated');
+    WITH CHECK (bucket_id = 'study_screenshots');
