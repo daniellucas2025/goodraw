@@ -344,7 +344,7 @@
             <p>Seus dados salvos no Supabase, sincronizados em qualquer tela.</p>
           </div>
           <div class="header-actions">
-            <a href="index.html" class="btn btn-secondary" style="text-decoration:none;">✏️ Simulador Web</a>
+            <a href="../goodraw-site/index.html" class="btn btn-secondary" style="text-decoration:none;">✏️ Simulador Web</a>
             <button class="btn btn-secondary" onclick="syncNow()">🔄 Sincronizar Agora</button>
             <button class="btn btn-primary" onclick="loadSampleData()">➕ Adicionar Exemplo</button>
           </div>
@@ -506,6 +506,10 @@
         dot.classList.remove('connected');
         text.textContent = 'Modo Local / Offline';
       }
+      const urlInput = document.getElementById('supabaseUrlInput');
+      const keyInput = document.getElementById('supabaseKeyInput');
+      if (urlInput && !urlInput.value && sync.config.url) urlInput.value = sync.config.url;
+      if (keyInput && !keyInput.value && sync.config.anonKey) keyInput.value = sync.config.anonKey;
     }
 
     async function saveCloudConfig() {
