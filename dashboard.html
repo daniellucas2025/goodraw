@@ -319,15 +319,12 @@
         <li class="nav-item" data-view="grifos">
           <span class="nav-icon">🖍️</span> Grifos de Leis
         </li>
-        <li class="nav-item" data-view="config">
-          <span class="nav-icon">⚙️</span> Supabase Cloud
-        </li>
       </ul>
 
       <div class="cloud-status-box">
         <div class="cloud-indicator">
-          <div class="dot" id="cloudDot"></div>
-          <span id="cloudStatusText">Desconectado</span>
+          <div class="dot connected"></div>
+          <span>Sincronizado na Nuvem</span>
         </div>
         <p style="font-size: 11.5px; color: var(--text-mute);">Sincronização em tempo real PC, Tablet e Celular.</p>
       </div>
@@ -377,42 +374,6 @@
         <h3 style="margin-bottom: 16px; font-size: 18px; font-weight: 700;">Recortes e Questões Recentes</h3>
         <div class="cards-grid" id="recentCardsGrid">
           <!-- Injetado dinamicamente via JS -->
-        </div>
-      </section>
-
-      <!-- VIEW: CONFIGURAÇÕES SUPABASE -->
-      <section id="view-config" style="display: none;">
-        <div class="view-header">
-          <div class="view-title">
-            <h1>Configuração do Supabase Cloud</h1>
-            <p>Insira a URL e Chave Anon do seu projeto Supabase para sincronizar em nuvem.</p>
-          </div>
-        </div>
-
-        <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; max-width: 720px;">
-          <div class="form-group">
-            <label>Supabase Project URL</label>
-            <input type="text" id="supabaseUrlInput" class="form-control" placeholder="https://seu-projeto.supabase.co">
-            <div class="help-text">Disponível em Project Settings → API → Project URL</div>
-          </div>
-
-          <div class="form-group">
-            <label>Supabase Anon Key (Public Key)</label>
-            <input type="password" id="supabaseKeyInput" class="form-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-            <div class="help-text">Disponível em Project Settings → API → anon / public</div>
-          </div>
-
-          <div class="form-group">
-            <label>Storage Bucket para Imagens</label>
-            <input type="text" id="supabaseBucketInput" class="form-control" value="study_screenshots">
-          </div>
-
-          <div style="display: flex; gap: 12px; margin-top: 24px;">
-            <button class="btn btn-primary" onclick="saveCloudConfig()">💾 Salvar & Testar Conexão</button>
-            <button class="btn btn-secondary" onclick="loadSampleData()">Carregar Exemplos</button>
-          </div>
-
-          <div id="connResult" style="margin-top: 18px; font-weight: 700; font-size: 14px;"></div>
         </div>
       </section>
 
@@ -473,8 +434,7 @@
       dashboard: document.getElementById('view-dashboard'),
       caderno: document.getElementById('view-caderno'),
       prints: document.getElementById('view-prints'),
-      grifos: document.getElementById('view-grifos'),
-      config: document.getElementById('view-config'),
+      grifos: document.getElementById('view-grifos')
     };
 
     navItems.forEach(item => {
@@ -497,46 +457,7 @@
     const sync = window.SupabaseSyncService;
 
     function updateStatusIndicator() {
-      const dot = document.getElementById('cloudDot');
-      const text = document.getElementById('cloudStatusText');
-      if (sync.isConfigured()) {
-        dot.classList.add('connected');
-        text.textContent = 'Supabase Conectado';
-      } else {
-        dot.classList.remove('connected');
-        text.textContent = 'Modo Local / Offline';
-      }
-      const urlInput = document.getElementById('supabaseUrlInput');
-      const keyInput = document.getElementById('supabaseKeyInput');
-      if (urlInput && !urlInput.value && sync.config.url) urlInput.value = sync.config.url;
-      if (keyInput && !keyInput.value && sync.config.anonKey) keyInput.value = sync.config.anonKey;
-    }
-
-    async function saveCloudConfig() {
-      const url = document.getElementById('supabaseUrlInput').value.trim();
-      const anonKey = document.getElementById('supabaseKeyInput').value.trim();
-      const bucket = document.getElementById('supabaseBucketInput').value.trim();
-      const resEl = document.getElementById('connResult');
-
-      if (!url || !anonKey) {
-        resEl.style.color = '#f87171';
-        resEl.textContent = 'Por favor, preencha URL e Chave Anon.';
-        return;
-      }
-
-      resEl.style.color = '#fbbf24';
-      resEl.textContent = 'Testando conexão...';
-
-      try {
-        await sync.updateConfig({ url, anonKey, bucket });
-        updateStatusIndicator();
-        resEl.style.color = '#34d399';
-        resEl.textContent = '✅ Conectado com sucesso ao Supabase Cloud!';
-        renderAll();
-      } catch (e) {
-        resEl.style.color = '#f87171';
-        resEl.textContent = 'Erro ao conectar: ' + e.message;
-      }
+      // Indicador visual discreto de conexão ativa
     }
 
     // Modal Image
