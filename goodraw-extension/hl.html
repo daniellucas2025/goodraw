@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GooHighlights</title>
+<style>
+  :root { color-scheme: light dark; --bg:#F5F5FA; --card:#fff; --fg:#1A1A2E; --mute:#6b6b7b; --line:#E4E4EE; --brand:#4A4AFF; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14141c; --card:#1c1c26; --fg:#ececf3; --mute:#a3a3b5; --line:#33333f; } }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--fg); font-family:'Segoe UI',Arial,sans-serif; display:flex; justify-content:center; padding:48px 18px; }
+  main { width:100%; max-width:560px; display:flex; flex-direction:column; gap:16px; }
+  header { display:flex; align-items:center; gap:12px; }
+  header img { width:44px; height:44px; border-radius:12px; }
+  header b { font-size:20px; } header small { display:block; color:var(--mute); font-size:13px; font-weight:500; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; }
+  .card h2 { margin:0 0 6px; font-size:16.5px; display:flex; align-items:center; gap:10px; }
+  .card p { margin:0; color:var(--mute); font-size:14px; line-height:1.55; }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
+  .badge.local { background:#FEF3C7; color:#92400E; } .badge.cloud { background:#DCFCE7; color:#166534; } .badge.wait { background:#E0E7FF; color:#3730A3; }
+  .badge i { width:6px; height:6px; border-radius:3px; background:currentColor; display:block; }
+  .acts { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  button { height:44px; border-radius:12px; font:inherit; font-size:14.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--line); background:transparent; color:var(--fg); }
+  button.go { border:none; color:#fff; background:linear-gradient(90deg,#4a4aff,#8b3dff); }
+  button:disabled { opacity:.5; cursor:default; }
+  .fine { font-size:12.5px; color:var(--mute); text-align:center; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="icons/icon128.png" alt=""><div><b>GooHighlights</b><small data-t="sub"></small></div></header>
+  <section class="card" id="acc"></section>
+  <section class="card" id="access"></section>
+  <p class="fine" data-t="fine"></p>
+</main>
+<script src="hl.js"></script>
+</body>
+</html>

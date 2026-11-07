@@ -381,6 +381,240 @@
       return new Blob([arr], { type: mimeType });
     }
 
+
+    // ──────────────────────── REENVIAR CONFIRMAÇÃO DE E-MAIL ────────────────────────
+    async resendConfirmationEmail(email) {
+      if (!this.isConfigured() || !email) throw new Error('E-mail inválido ou não informado.');
+      const res = await fetch(`${this.config.url}/auth/v1/resend`, {
+        method: 'POST',
+        headers: { 'apikey': this.config.anonKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'signup', email: email.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || data.error_description || 'Erro ao reenviar e-mail');
+      return data;
+    }
+
+    // ──────────────────────── CADERNO DE ERROS ────────────────────────
+    async saveErrorQuestion(question) {
+      const id = question.id || 'err_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const record = {
+        id,
+        title: question.title || 'Questão sem título',
+        banca: question.banca || 'Geral',
+        disciplina: question.disciplina || 'Geral',
+        statement: question.statement || '',
+        marked_option: question.marked_option || '',
+        correct_option: question.correct_option || '',
+        error_reason: question.error_reason || 'Pegadinha',
+        explanation: question.explanation || '',
+        screenshot_url: question.screenshot_url || '',
+        is_resolved: Boolean(question.is_resolved),
+        created_at: question.created_at || new Date().toISOString()
+      };
+
+      const key = 'goodraw_caderno_erros';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      const idx = list.findIndex(x => x.id === id);
+      if (idx >= 0) list[idx] = record;
+      else list.unshift(record);
+      localStorage.setItem(key, JSON.stringify(list));
+
+      if (this.isConfigured()) {
+        try {
+          const notePayload = {
+            title: `[ERRO] ${record.title} (${record.banca})`,
+            content: JSON.stringify(record),
+            subject: record.disciplina,
+            tags: ['caderno_erros', record.banca, record.error_reason, record.is_resolved ? 'resolvido' : 'pendente'],
+            user_id: this.session?.user?.id || null
+          };
+          fetch(`${this.config.url}/rest/v1/study_notes`, {
+            method: 'POST',
+            headers: this.getAuthHeader(),
+            body: JSON.stringify(notePayload)
+          }).catch(() => {});
+        } catch (e) {}
+      }
+      return record;
+    }
+
+    async listErrorQuestions(filters = {}) {
+      const key = 'goodraw_caderno_erros';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      if (filters.banca && filters.banca !== 'todas') {
+        list = list.filter(q => (q.banca || '').toLowerCase() === filters.banca.toLowerCase());
+      }
+      if (filters.disciplina && filters.disciplina !== 'todas') {
+        list = list.filter(q => (q.disciplina || '').toLowerCase() === filters.disciplina.toLowerCase());
+      }
+      if (filters.error_reason && filters.error_reason !== 'todos') {
+        list = list.filter(q => (q.error_reason || '').toLowerCase() === filters.error_reason.toLowerCase());
+      }
+      if (filters.status === 'pendente') {
+        list = list.filter(q => !q.is_resolved);
+      } else if (filters.status === 'resolvido') {
+        list = list.filter(q => q.is_resolved);
+      }
+      if (filters.search) {
+        const s = filters.search.toLowerCase();
+        list = list.filter(q => (q.title + ' ' + (q.statement||'') + ' ' + (q.explanation||'')).toLowerCase().includes(s));
+      }
+      return list;
+    }
+
+    async toggleErrorQuestionStatus(id) {
+      const key = 'goodraw_caderno_erros';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      const q = list.find(x => x.id === id);
+      if (q) {
+        q.is_resolved = !q.is_resolved;
+        localStorage.setItem(key, JSON.stringify(list));
+      }
+      return q;
+    }
+
+    async deleteErrorQuestion(id) {
+      const key = 'goodraw_caderno_erros';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      list = list.filter(x => x.id !== id);
+      localStorage.setItem(key, JSON.stringify(list));
+      return { ok: true };
+    }
+
+    // ──────────────────────── FLASHCARDS COM SRS ────────────────────────
+    async saveFlashcard(card) {
+      const id = card.id || 'fc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const record = {
+        id,
+        front: card.front || '',
+        back: card.back || '',
+        subject: card.subject || 'Geral',
+        tags: card.tags || [],
+        interval_days: card.interval_days || 1,
+        review_count: card.review_count || 0,
+        next_review: card.next_review || new Date().toISOString(),
+        created_at: card.created_at || new Date().toISOString()
+      };
+
+      const key = 'goodraw_flashcards';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      const idx = list.findIndex(x => x.id === id);
+      if (idx >= 0) list[idx] = record;
+      else list.unshift(record);
+      localStorage.setItem(key, JSON.stringify(list));
+
+      if (this.isConfigured()) {
+        try {
+          fetch(`${this.config.url}/rest/v1/study_notes`, {
+            method: 'POST',
+            headers: this.getAuthHeader(),
+            body: JSON.stringify({
+              title: `[FLASHCARD] ${record.front.substring(0, 50)}`,
+              content: JSON.stringify(record),
+              subject: record.subject,
+              tags: ['flashcard', record.subject],
+              user_id: this.session?.user?.id || null
+            })
+          }).catch(() => {});
+        } catch (e) {}
+      }
+      return record;
+    }
+
+    async listFlashcards(subject = '') {
+      const key = 'goodraw_flashcards';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      if (subject && subject !== 'todos') {
+        list = list.filter(c => (c.subject || '').toLowerCase() === subject.toLowerCase());
+      }
+      return list;
+    }
+
+    async reviewFlashcard(id, quality) {
+      const key = 'goodraw_flashcards';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      const c = list.find(x => x.id === id);
+      if (c) {
+        c.review_count = (c.review_count || 0) + 1;
+        const addDays = quality === 'acertei' ? 7 : quality === 'dificil' ? 3 : 1;
+        c.interval_days = addDays;
+        const d = new Date();
+        d.setDate(d.getDate() + addDays);
+        c.next_review = d.toISOString();
+        localStorage.setItem(key, JSON.stringify(list));
+      }
+      return c;
+    }
+
+    async deleteFlashcard(id) {
+      const key = 'goodraw_flashcards';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      list = list.filter(x => x.id !== id);
+      localStorage.setItem(key, JSON.stringify(list));
+      return { ok: true };
+    }
+
+    // ──────────────────────── PLANNER & METAS SEMANAIS ────────────────────────
+    async saveGoal(goal) {
+      const id = goal.id || 'goal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const record = {
+        id,
+        text: goal.text || '',
+        category: goal.category || 'Meta Semanal',
+        completed: Boolean(goal.completed),
+        created_at: goal.created_at || new Date().toISOString()
+      };
+      const key = 'goodraw_planner_goals';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      const idx = list.findIndex(x => x.id === id);
+      if (idx >= 0) list[idx] = record;
+      else list.unshift(record);
+      localStorage.setItem(key, JSON.stringify(list));
+      return record;
+    }
+
+    async listGoals() {
+      const key = 'goodraw_planner_goals';
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    }
+
+    async toggleGoal(id) {
+      const key = 'goodraw_planner_goals';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      const g = list.find(x => x.id === id);
+      if (g) {
+        g.completed = !g.completed;
+        localStorage.setItem(key, JSON.stringify(list));
+      }
+      return g;
+    }
+
+    async deleteGoal(id) {
+      const key = 'goodraw_planner_goals';
+      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      list = list.filter(x => x.id !== id);
+      localStorage.setItem(key, JSON.stringify(list));
+      return { ok: true };
+    }
+
+    // ──────────────────────── POMODORO STATS ────────────────────────
+    recordPomodoro(minutes = 25) {
+      const today = new Date().toISOString().split('T')[0];
+      const key = 'goodraw_pomodoro_' + today;
+      let data = JSON.parse(localStorage.getItem(key) || '{"cycles":0,"minutes":0}');
+      data.cycles += 1;
+      data.minutes += minutes;
+      localStorage.setItem(key, JSON.stringify(data));
+      return data;
+    }
+
+    getPomodoroStats() {
+      const today = new Date().toISOString().split('T')[0];
+      const key = 'goodraw_pomodoro_' + today;
+      return JSON.parse(localStorage.getItem(key) || '{"cycles":0,"minutes":0}');
+    }
+
     on(event, fn) { this.listeners.add(fn); }
     off(event, fn) { this.listeners.delete(fn); }
     emit(type, data) { this.listeners.forEach(fn => { try { fn(type, data); } catch (e) {} }); }

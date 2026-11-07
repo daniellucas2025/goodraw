@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "GooDraw",
+    "description": "Nome da extensão (igual nos dois idiomas)."
+  },
+  "extDescription": {
+    "message": "Ferramenta de desenho sobre qualquer página web",
+    "description": "Descrição curta do manifest."
+  },
+  "actionTitle": {
+    "message": "GooDraw",
+    "description": "Dica do botão da extensão na barra do navegador."
+  }
+}

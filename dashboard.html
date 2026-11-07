@@ -2,308 +2,601 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>GooDraw Cloud — Suas Questões, Prints e Anotações em Qualquer Lugar</title>
-  <link rel="icon" type="image/png" href="icons/icon48.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GooDraw Study Cloud - Caderno de Erros, Prints, Grifos e Flashcards</title>
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <style>
-    @font-face { font-family: 'Poppins'; font-weight: 400; src: url(fonts/poppins-500.woff2) format('woff2'); }
-    @font-face { font-family: 'Poppins'; font-weight: 600; src: url(fonts/poppins-700.woff2) format('woff2'); }
-    @font-face { font-family: 'Poppins'; font-weight: 700; src: url(fonts/poppins-700.woff2) format('woff2'); }
-    @font-face { font-family: 'Poppins'; font-weight: 800; src: url(fonts/poppins-800.woff2) format('woff2'); }
-
     :root {
-      --bg: #0d0f22;
-      --surface: #171a33;
-      --surface-card: rgba(28, 32, 64, 0.85);
-      --border: rgba(255, 255, 255, 0.1);
+      --bg: #090a16;
+      --surface-sidebar: #0f1123;
+      --surface-card: #151833;
+      --surface-card-hover: #1c2045;
+      --surface-elevated: #1f234d;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text: #f8fafc;
+      --text-mute: #94a3b8;
       --accent: #6366f1;
-      --accent-grad: linear-gradient(135deg, #4f46e5 0%, #9333ea 50%, #06b6d4 100%);
-      --accent-amber: #f59e0b;
-      --text: #ffffff;
-      --text-mute: #9ca3af;
-      --sidebar-w: 260px;
+      --accent-hover: #4f46e5;
+      --accent-grad: linear-gradient(135deg, #6366f1, #8b5cf6);
+      --gold: #f59e0b;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --sky: #38bdf8;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Poppins', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
     }
 
-    /* Layout: Sidebar + Main Area */
-    .app-layout {
+    /* Layout Principal */
+    .app-container {
       display: flex;
       flex: 1;
       min-height: 100vh;
     }
 
-    /* Mobile Header */
-    .mobile-header {
-      display: none;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 18px;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-    .btn-menu {
-      background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;
-    }
-
-    /* Sidebar Navigation */
+    /* Sidebar (Imagem 3) */
     .sidebar {
-      width: var(--sidebar-w);
-      background: var(--surface);
+      width: 260px;
+      background: var(--surface-sidebar);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      padding: 24px 16px;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-      z-index: 60;
-      transition: transform 0.3s ease;
+      flex-shrink: 0;
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 40;
     }
+
     .brand {
+      padding: 24px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 32px;
-      padding: 0 8px;
+      border-bottom: 1px solid var(--border);
     }
-    .brand img {
-      width: 38px; height: 38px; border-radius: 10px;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #4a4aff, #8b3dff);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 18px -4px rgba(74, 74, 255, 0.7);
     }
-    .brand-name {
-      font-size: 19px; font-weight: 800; letter-spacing: -0.02em;
-    }
-    .brand-name span { color: #06b6d4; }
+    .brand-logo svg { width: 22px; height: 22px; color: #fff; }
+    .brand-text h2 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-text span { font-size: 11px; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-list {
+      list-style: none;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
     .nav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 16px; border-radius: 12px;
-      color: var(--text-mute); font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-mute);
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
     }
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.06); color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
     }
     .nav-item.active {
-      background: var(--accent); color: #fff;
-      box-shadow: 0 6px 20px -4px rgba(99, 102, 241, 0.6);
+      background: #1e1b4b;
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 14px -3px rgba(99, 102, 241, 0.25);
     }
-    .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; }
 
-    .cloud-status-box {
-      margin-top: auto;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-mute);
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-    .cloud-indicator {
-      display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700;
+    .btn-clear-data {
+      background: none;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
     }
-    .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
-    }
-    .dot.connected {
-      background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    .btn-clear-data:hover {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: #f43f5e;
+      color: #fff;
     }
 
-    /* Main Content */
-    .main-view {
+    /* Conteúdo Principal */
+    .main-content {
       flex: 1;
-      padding: 32px 40px;
-      max-width: 1300px;
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
+      padding: 28px 36px 60px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
-    .view-header {
+
+    /* Top Bar */
+    .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 28px;
-      flex-wrap: wrap;
       gap: 16px;
+      flex-wrap: wrap;
     }
-    .view-title h1 {
-      font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    .view-title p {
-      color: var(--text-mute); font-size: 14px; margin-top: 4px;
+    .menu-toggle {
+      display: none;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
     }
-    .header-actions { display: flex; gap: 10px; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-weight: 600;
+    }
+    .status-badge.offline {
+      background: rgba(148, 163, 184, 0.1);
+      border-color: rgba(148, 163, 184, 0.3);
+      color: #94a3b8;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
     .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; border-radius: 99px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      border: none; transition: transform 0.15s, filter 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 99px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.15s, filter 0.15s, background 0.15s;
+      text-decoration: none;
+      font-family: inherit;
     }
     .btn-primary {
-      background: var(--accent-grad); color: #fff;
-      box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.5);
+      background: var(--accent-grad);
+      color: #fff;
+      box-shadow: 0 6px 18px -4px rgba(99, 102, 241, 0.5);
     }
-    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.08); color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
       border: 1px solid var(--border);
     }
     .btn-secondary:hover { background: rgba(255, 255, 255, 0.14); }
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #fda4af;
+    }
+    .btn-danger:hover { background: #f43f5e; color: #fff; }
 
-    /* Overview Stats */
+    /* View Headers */
+    .view-header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .view-title h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .view-title p {
+      color: var(--text-mute);
+      font-size: 14px;
+      max-width: 700px;
+      line-height: 1.5;
+    }
+
+    /* Cards e Estatísticas */
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-bottom: 32px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
     }
     .stat-card {
       background: var(--surface-card);
       border: 1px solid var(--border);
       border-radius: 18px;
-      padding: 20px 24px;
+      padding: 18px 20px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      backdrop-filter: blur(10px);
+      gap: 14px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.18);
     }
     .stat-icon {
-      width: 48px; height: 48px; border-radius: 14px;
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      display: grid; place-items: center; font-size: 22px;
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      flex-shrink: 0;
     }
     .stat-val { font-size: 24px; font-weight: 800; line-height: 1.2; }
-    .stat-lbl { font-size: 12.5px; color: var(--text-mute); }
+    .stat-lbl { font-size: 12px; color: var(--text-mute); margin-top: 2px; }
 
-    /* Cards Grid (Prints / Caderno de Erros) */
+    /* Barra de Ações Rápidas */
+    .quick-actions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding: 16px;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    /* Grids de Cards */
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 22px;
+      gap: 20px;
     }
-    .capture-card {
+
+    /* Card Genérico */
+    .item-card {
       background: var(--surface-card);
       border: 1px solid var(--border);
       border-radius: 18px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      transition: transform 0.2s, border-color 0.2s;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
     }
-    .capture-card:hover {
-      transform: translateY(-4px); border-color: rgba(255, 255, 255, 0.25);
+    .item-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.5);
     }
-    .card-thumb {
-      height: 190px;
-      background: #090a16;
-      display: grid; place-items: center;
-      overflow: hidden; cursor: pointer;
+    .item-header {
+      padding: 16px 18px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-fgv { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-cebraspe { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-fcc { background: rgba(167, 139, 250, 0.15); color: #c084fc; border: 1px solid rgba(167, 139, 250, 0.3); }
+    .badge-vunesp { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-status-pendente { background: rgba(244, 63, 94, 0.15); color: #fda4af; }
+    .badge-status-resolvido { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+
+    .item-body {
+      padding: 0 18px 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .item-title { font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .item-desc { font-size: 13.5px; color: var(--text-mute); line-height: 1.5; }
+    .item-highlight-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+    .item-thumb {
+      height: 180px;
+      background: #000;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
       position: relative;
+      overflow: hidden;
     }
-    .card-thumb img {
-      width: 100%; height: 100%; object-fit: cover;
+    .item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       transition: transform 0.3s;
     }
-    .card-thumb:hover img { transform: scale(1.04); }
-    .card-badge {
-      position: absolute; top: 12px; left: 12px;
-      padding: 4px 10px; border-radius: 99px;
-      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px);
-      font-size: 11px; font-weight: 700; color: #ffd43b;
-    }
-    .card-content { padding: 18px 20px; flex: 1; display: flex; flex-direction: column; }
-    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .card-note { font-size: 13.5px; color: var(--text-mute); line-height: 1.5; margin-bottom: 14px; flex: 1; }
-    .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-    .tag {
-      padding: 3px 8px; border-radius: 6px;
-      background: rgba(255, 255, 255, 0.08); font-size: 11px; color: #c7d2fe;
-    }
-    .card-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 12px;
-      font-size: 12px; color: var(--text-mute);
+    .item-thumb:hover img { transform: scale(1.05); }
+
+    .item-footer {
+      padding: 12px 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-mute);
     }
 
-    /* Modal Image Zoom */
+    /* Filtros e Busca */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 10px 18px;
+      color: var(--text);
+      font-size: 13.5px;
+      min-width: 240px;
+      flex: 1;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--border-focus); }
+    .filter-select {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 9px 16px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Flashcard Interativo (Flip 3D) */
+    .flashcard-container {
+      perspective: 1000px;
+      max-width: 680px;
+      margin: 0 auto 30px;
+      min-height: 320px;
+    }
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      min-height: 320px;
+      text-align: center;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+    .flashcard-inner.flipped {
+      transform: rotateY(180deg);
+    }
+    .flashcard-face {
+      position: absolute;
+      width: 100%;
+      min-height: 320px;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 24px;
+      padding: 36px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+    }
+    .flashcard-front {
+      background: radial-gradient(120% 120% at 50% 0%, #1e1b4b 0%, #0f1123 100%);
+      color: var(--text);
+    }
+    .flashcard-back {
+      background: radial-gradient(120% 120% at 50% 0%, #064e3b 0%, #022c22 100%);
+      color: #ecfdf5;
+      transform: rotateY(180deg);
+    }
+    .fc-hint {
+      font-size: 12px;
+      color: var(--text-mute);
+      margin-top: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .fc-srs-actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    /* Timer Pomodoro */
+    .timer-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px;
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 36px;
+      box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.8);
+    }
+    .timer-modes {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .timer-display {
+      font-size: 80px;
+      font-weight: 800;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      color: #38bdf8;
+      letter-spacing: -0.04em;
+      margin: 10px 0 24px;
+      text-shadow: 0 0 30px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Lista de Metas (Planner) */
+    .goal-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .goal-item:hover { background: rgba(255, 255, 255, 0.06); }
+    .goal-item.done { opacity: 0.6; text-decoration: line-through; }
+    .goal-checkbox { width: 18px; height: 18px; accent-color: #6366f1; cursor: pointer; }
+
+    /* Modais */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(5, 5, 15, 0.88);
       backdrop-filter: blur(8px); z-index: 100;
-      display: none; place-items: center; padding: 24px;
+      display: none; place-items: center; padding: 20px;
     }
     .modal-overlay.open { display: grid; }
     .modal-box {
-      max-width: 900px; width: 100%; max-height: 90vh;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.9);
+      animation: rise 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
+    @keyframes rise { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
     .modal-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .modal-img-wrap {
-      flex: 1; overflow: auto; background: #000; text-align: center; padding: 10px;
-    }
-    .modal-img-wrap img { max-width: 100%; height: auto; border-radius: 8px; }
-
-    /* Settings Form */
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 13.5px; font-weight: 700; margin-bottom: 8px; color: #d1d5db; }
+    .modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 700; color: #cbd5e1; }
     .form-control {
-      width: 100%; padding: 12px 16px; border-radius: 12px;
-      background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border);
-      color: #fff; font-size: 14px; font-family: inherit;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
     }
-    .form-control:focus { outline: none; border-color: var(--accent); }
-    .help-text { font-size: 12px; color: var(--text-mute); margin-top: 6px; }
+    .form-control:focus { border-color: var(--border-focus); }
+    textarea.form-control { min-height: 90px; resize: vertical; }
 
-    /* Responsive */
+    /* Email Confirmation Banner */
+    .email-confirm-banner {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid #10b981;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-top: 14px;
+      text-align: left;
+    }
+
     @media (max-width: 900px) {
       .sidebar {
-        position: fixed; left: 0; top: 0; bottom: 0;
+        position: fixed; top: 0; bottom: 0; left: 0;
         transform: translateX(-100%);
       }
       .sidebar.open { transform: translateX(0); }
-      .mobile-header { display: flex; }
-      .main-view { padding: 20px 16px; }
-      .cards-grid { grid-template-columns: 1fr; }
+      .menu-toggle { display: block; }
+      .main-content { padding: 20px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Mobile Top Bar -->
-  <header class="mobile-header">
-    <div class="brand">
-      <img src="icons/icon48.png" alt="GooDraw">
-      <div class="brand-name">GooDraw <span>Cloud</span></div>
-    </div>
-    <button class="btn-menu" id="btnToggleSidebar">☰</button>
-  </header>
-
-  <div class="app-layout">
-    <!-- Sidebar Navigation -->
+  <div class="app-container">
+    <!-- SIDEBAR (IMAGEM 3) -->
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img src="icons/icon128.png" alt="GooDraw">
-        <div class="brand-name">GooDraw <span>Cloud</span></div>
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>GooDraw</h2>
+          <span>Study Cloud</span>
+        </div>
       </div>
 
       <ul class="nav-list">
@@ -330,162 +623,496 @@
         </li>
       </ul>
 
-      <div class="cloud-status-box">
-        <div class="cloud-indicator">
-          <div class="dot connected"></div>
-          <span>Sincronizado na Nuvem</span>
+      <div class="sidebar-footer">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span>GooDraw v1.1</span>
+          <span style="color:#10b981; font-weight:700;">100% Grátis</span>
         </div>
-        <p style="font-size: 11.5px; color: var(--text-mute);">Sincronização em tempo real PC, Tablet e Celular.</p>
+        <button class="btn-clear-data" onclick="confirmClearAll()">🗑️ Excluir todos os dados</button>
       </div>
     </aside>
 
-    <!-- Main Content View -->
-    <main class="main-view">
-      
-      <!-- VIEW: DASHBOARD / OVERVIEW -->
+    <!-- ÁREA PRINCIPAL -->
+    <main class="main-content">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="btnToggleSidebar">☰</button>
+          <div class="status-badge" id="statusBadge">
+            <span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+            <span>Nuvem Ativa</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <a href="index.html" class="btn btn-secondary">✏️ Abrir Desenho / Simulador</a>
+          <button class="btn btn-primary" id="btnAuthAccount" onclick="openAuthModal()">👤 Criar Conta / Entrar</button>
+        </div>
+      </div>
+
+      <!-- VIEW 1: VISÃO GERAL -->
       <section id="view-dashboard">
         <div class="view-header">
           <div class="view-title">
-            <h1>Painel de Estudos & Questões</h1>
-            <p>Seus dados salvos no Supabase, sincronizados em qualquer tela.</p>
-          </div>
-          <div class="header-actions">
-            <a href="index.html" class="btn btn-secondary" style="text-decoration:none;">✏️ Simulador Web</a>
-            <button class="btn btn-primary" id="btnAuthAccount" onclick="openAuthModal()">👤 Minha Conta</button>
-            <button class="btn btn-secondary" onclick="syncNow()">🔄 Sincronizar</button>
-            <button class="btn btn-secondary" onclick="confirmClearAll()" style="color:#f87171; border-color:rgba(248,113,113,0.35);">🗑️ Excluir Tudo</button>
+            <h1 id="greetingUser">Visão Geral dos Estudos 🎯</h1>
+            <p>Seu ecossistema de estudo ativo: revise seus erros, pratique flashcards e domine a legislação para a aprovação.</p>
           </div>
         </div>
 
         <div class="stats-row">
           <div class="stat-card">
-            <div class="stat-icon">📕</div>
+            <div class="stat-icon" style="background:rgba(244,63,94,0.15); color:#f43f5e;">📕</div>
             <div>
               <div class="stat-val" id="statErrors">0</div>
-              <div class="stat-lbl">Questões no Caderno de Erros</div>
+              <div class="stat-lbl">No Caderno de Erros</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📷</div>
+            <div class="stat-icon" style="background:rgba(56,189,248,0.15); color:#38bdf8;">📷</div>
             <div>
               <div class="stat-val" id="statPrints">0</div>
-              <div class="stat-lbl">Prints & Recortes Salvos</div>
+              <div class="stat-lbl">Prints e Recortes</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">🖍️</div>
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:#fbbf24;">🖍️</div>
             <div>
-              <div class="stat-val" id="statHighlights">0</div>
-              <div class="stat-lbl">Grifos em Leis e Artigos</div>
+              <div class="stat-val" id="statGrifos">0</div>
+              <div class="stat-lbl">Grifos de Leis</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(167,139,250,0.15); color:#c084fc;">🗂️</div>
+            <div>
+              <div class="stat-val" id="statFlashcards">0</div>
+              <div class="stat-lbl">Flashcards Criados</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:#34d399;">⏱️</div>
+            <div>
+              <div class="stat-val" id="statPomodoro">0</div>
+              <div class="stat-lbl">Ciclos Pomodoro Hoje</div>
             </div>
           </div>
         </div>
 
-        <h3 style="margin-bottom: 16px; font-size: 18px; font-weight: 700;">Recortes e Questões Recentes</h3>
-        <div class="cards-grid" id="recentCardsGrid">
-          <!-- Injetado dinamicamente via JS -->
+        <!-- Ações Rápidas -->
+        <div class="quick-actions-bar">
+          <button class="btn btn-primary" onclick="openNewQuestionModal()">➕ Questão no Caderno de Erros</button>
+          <button class="btn btn-secondary" onclick="openNewFlashcardModal()">➕ Novo Flashcard</button>
+          <button class="btn btn-secondary" onclick="openNewHighlightModal()">➕ Grifo de Lei</button>
+          <button class="btn btn-secondary" onclick="switchView('planner')">⏱️ Iniciar Timer Pomodoro</button>
+          <button class="btn btn-secondary" onclick="openUploadPrintModal()">📷 Subir Print Manual</button>
         </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:24px; margin-bottom:28px;">
+          <!-- Card de Dica de Fixação -->
+          <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:18px; padding:22px;">
+            <h3 style="font-size:16px; margin-bottom:10px; color:#38bdf8;">💡 Dica de Ouro: Estudo Reverso por Questões</h3>
+            <p style="font-size:13.5px; color:var(--text-mute); line-height:1.6;">
+              Ao resolver questões de banca (FGV, Cebraspe, FCC), desenhe sobre a tela com o <strong>GooDraw</strong> para identificar o comando da questão. Caso erre, envie o recorte direto para o <strong>Caderno de Erros</strong> ou transforme em <strong>Flashcard</strong> com repetição espaçada.
+            </p>
+          </div>
+
+          <!-- Distribuição por Banca -->
+          <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:18px; padding:22px;">
+            <h3 style="font-size:16px; margin-bottom:12px;">📊 Questões Salvas por Banca</h3>
+            <div id="bancaDistributionBars" style="display:flex; flex-direction:column; gap:10px;">
+              <div style="font-size:13px; color:var(--text-mute);">Nenhuma questão registrada ainda. Adicione sua primeira questão no Caderno de Erros!</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="view-header" style="margin-top:20px;">
+          <h2 style="font-size:18px;">Atividades e Recortes Recentes</h2>
+        </div>
+        <div class="cards-grid" id="recentCardsGrid"></div>
       </section>
 
-      <!-- VIEW: CADERNO DE ERROS -->
+      <!-- VIEW 2: CADERNO DE ERROS -->
       <section id="view-caderno" style="display: none;">
         <div class="view-header">
           <div class="view-title">
-            <h1>Caderno de Erros</h1>
-            <p>Questões que exigem revisão periódica antes da sua prova.</p>
+            <h1>Caderno de Erros Estratégico 📕</h1>
+            <p>Mapeie seus erros por banca examinadora e motivo da falha. Revise periodicamente até fixar 100%.</p>
           </div>
+          <button class="btn btn-primary" onclick="openNewQuestionModal()">➕ Nova Questão no Caderno</button>
         </div>
+
+        <div class="filter-bar">
+          <input type="text" class="search-input" id="searchCaderno" placeholder="Buscar no caderno de erros..." oninput="filterCaderno()">
+          <select class="filter-select" id="filterBanca" onchange="filterCaderno()">
+            <option value="todas">Todas as Bancas</option>
+            <option value="FGV">FGV</option>
+            <option value="Cebraspe">Cebraspe / CESPE</option>
+            <option value="FCC">FCC</option>
+            <option value="Vunesp">Vunesp</option>
+            <option value="IBFC">IBFC</option>
+            <option value="Outras">Outras</option>
+          </select>
+          <select class="filter-select" id="filterMotivo" onchange="filterCaderno()">
+            <option value="todos">Todos os Motivos</option>
+            <option value="Pegadinha">⚠️ Pegadinha da Banca</option>
+            <option value="Atenção">💤 Falta de Atenção</option>
+            <option value="Conceito">📚 Conceito Não Estudado</option>
+            <option value="Dúvida">🔀 Dúvida entre Duas</option>
+          </select>
+          <select class="filter-select" id="filterStatus" onchange="filterCaderno()">
+            <option value="todos">Todos os Status</option>
+            <option value="pendente">🔴 Pendentes de Revisão</option>
+            <option value="resolvido">🟢 Revisadas / Dominadas</option>
+          </select>
+        </div>
+
         <div class="cards-grid" id="cadernoGrid"></div>
       </section>
 
-      <!-- VIEW: PRINTS -->
+      <!-- VIEW 3: TODOS OS PRINTS -->
       <section id="view-prints" style="display: none;">
         <div class="view-header">
           <div class="view-title">
-            <h1>Todos os Prints e Recortes</h1>
-            <p>Galeria completa de capturas de tela com seus desenhos sobrepostos.</p>
+            <h1>Todos os Prints e Recortes 📷</h1>
+            <p>Galeria completa de capturas de tela com seus desenhos sobrepostos feitos com o GooDraw.</p>
           </div>
+          <button class="btn btn-primary" onclick="openUploadPrintModal()">➕ Subir Print Manual</button>
         </div>
+
+        <div class="filter-bar">
+          <input type="text" class="search-input" id="searchPrints" placeholder="Buscar por título ou anotação..." oninput="filterPrints()">
+        </div>
+
         <div class="cards-grid" id="printsGrid"></div>
       </section>
 
-      <!-- VIEW: GRIFOS -->
+      <!-- VIEW 4: GRIFOS DE LEIS -->
       <section id="view-grifos" style="display: none;">
         <div class="view-header">
           <div class="view-title">
-            <h1>Grifos de Legislação</h1>
-            <p>Artigos e súmulas marcados durante seus estudos.</p>
+            <h1>Grifos e Artigos de Leis 🖍️</h1>
+            <p>Legislação e súmulas marcadas organizadas por cores: regras, exceções, prazos e jurisprudência.</p>
           </div>
+          <button class="btn btn-primary" onclick="openNewHighlightModal()">➕ Adicionar Grifo de Lei</button>
         </div>
-        <div id="grifosList" style="display: flex; flex-direction: column; gap: 14px;"></div>
+
+        <div class="filter-bar">
+          <input type="text" class="search-input" id="searchGrifos" placeholder="Buscar por artigo ou lei (ex: Art. 5, CF/88, 8.112)..." oninput="filterGrifos()">
+          <select class="filter-select" id="filterCorGrifo" onchange="filterGrifos()">
+            <option value="todas">Todas as Cores</option>
+            <option value="yellow">🟡 Amarelo (Regra Geral)</option>
+            <option value="green">🟢 Verde (Conceito / Definição)</option>
+            <option value="red">🔴 Vermelho / Rosa (Exceção / Pegadinha)</option>
+            <option value="blue">🔵 Azul (Prazos / Competência)</option>
+            <option value="purple">🟣 Roxo (Súmula / Jurisprudência)</option>
+          </select>
+        </div>
+
+        <div id="grifosList" style="display:flex; flex-direction:column; gap:14px;"></div>
       </section>
 
-    
-      <!-- VIEW: FLASHCARDS -->
+      <!-- VIEW 5: FLASHCARDS -->
       <section id="view-flashcards" style="display: none;">
         <div class="view-header">
           <div class="view-title">
-            <h1>Flashcards com Repetição Espaçada</h1>
-            <p>Seus recortes de questões transformados em cards interativos para estudo ativo.</p>
+            <h1>Flashcards com Repetição Espaçada 🗂️</h1>
+            <p>Fixação ativa do conteúdo com metodologia SRS. Vire o card para checar a resposta e autoavaliar sua retenção.</p>
           </div>
+          <button class="btn btn-primary" onclick="openNewFlashcardModal()">➕ Novo Flashcard</button>
+        </div>
+
+        <!-- Flashcard Flip Interativo -->
+        <div class="flashcard-container" id="studyCardContainer" style="display:none;">
+          <div class="flashcard-inner" id="studyCardInner" onclick="flipStudyCard()">
+            <div class="flashcard-face flashcard-front">
+              <span class="badge-pill badge-fgv" id="cardSubjectBadge">Direito</span>
+              <h2 id="cardFrontText" style="font-size:22px; font-weight:700; margin:18px 0; line-height:1.4;">Carregando pergunta...</h2>
+              <div class="fc-hint">Clique para virar o card 👆</div>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <span class="badge-pill badge-status-resolvido">Gabarito & Fundamentação</span>
+              <p id="cardBackText" style="font-size:17px; margin:18px 0; line-height:1.6;">Resposta detalhada...</p>
+              <div class="fc-hint">Como foi a lembrança? Avalie abaixo 👇</div>
+            </div>
+          </div>
+
+          <div class="fc-srs-actions">
+            <button class="btn btn-danger" onclick="gradeCurrentCard('errei')">❌ Errei (1 dia)</button>
+            <button class="btn btn-secondary" onclick="gradeCurrentCard('dificil')">🟡 Difícil (3 dias)</button>
+            <button class="btn btn-success" onclick="gradeCurrentCard('acertei')">✅ Acertei (7 dias)</button>
+          </div>
+        </div>
+
+        <div class="view-header" style="margin-top:20px;">
+          <h2 style="font-size:18px;">Baralho Completo de Flashcards</h2>
         </div>
         <div class="cards-grid" id="flashcardsGrid"></div>
       </section>
 
-      <!-- VIEW: PLANNER -->
+      <!-- VIEW 6: PLANNER & TIMER -->
       <section id="view-planner" style="display: none;">
         <div class="view-header">
           <div class="view-title">
-            <h1>Planejamento & Timer de Estudos</h1>
-            <p>Foco total na resolução de questões com técnica Pomodoro.</p>
+            <h1>Planejamento & Timer Pomodoro 📅</h1>
+            <p>Gerencie seus blocos de foco líquido na resolução de questões e acompanhe suas metas da semana.</p>
           </div>
         </div>
-        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:20px; padding:36px; text-align:center; max-width:600px; margin:0 auto;">
-          <div style="font-size:72px; font-weight:800; font-family:monospace; color:#38bdf8; margin-bottom:20px;" id="timerDisplay">25:00</div>
+
+        <!-- Timer Pomodoro Profissional -->
+        <div class="timer-card">
+          <div class="timer-modes">
+            <button class="btn btn-secondary active" id="btnMode25" onclick="setTimerMode(25, 'Foco 25m')">🍅 Foco 25m</button>
+            <button class="btn btn-secondary" id="btnMode50" onclick="setTimerMode(50, 'Foco 50m')">🎯 Foco 50m</button>
+            <button class="btn btn-secondary" id="btnMode5" onclick="setTimerMode(5, 'Intervalo 5m')">☕ Intervalo 5m</button>
+            <button class="btn btn-secondary" id="btnMode15" onclick="setTimerMode(15, 'Pausa 15m')">🏖️ Pausa 15m</button>
+          </div>
+          <div class="timer-display" id="timerDisplay">25:00</div>
           <div style="display:flex; justify-content:center; gap:14px;">
-            <button class="btn btn-primary" onclick="toggleTimer()" id="btnTimer" style="min-width:140px;">▶ Iniciar</button>
+            <button class="btn btn-primary" onclick="toggleTimer()" id="btnTimer" style="min-width:140px;">▶ Iniciar Foco</button>
             <button class="btn btn-secondary" onclick="resetTimer()">↺ Reiniciar</button>
           </div>
-          <p style="color:var(--text-mute); font-size:14px; margin-top:20px;">Ciclo ativo: 25 min de estudo com questões e 5 min de intervalo.</p>
+          <p style="color:var(--text-mute); font-size:13.5px; margin-top:20px;" id="timerModeLabel">Ciclo ativo: 25 min de foco total em questões.</p>
+        </div>
+
+        <!-- Metas Semanais -->
+        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:20px; padding:28px; max-width:640px; margin:0 auto;">
+          <h3 style="font-size:18px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Metas da Semana</span>
+            <span id="goalsProgressLabel" style="font-size:13px; color:#38bdf8; font-weight:700;">0% Concluído</span>
+          </h3>
+
+          <div style="display:flex; gap:10px; margin-bottom:18px;">
+            <input type="text" class="search-input" id="newGoalInput" placeholder="Ex: Resolver 50 questões FGV de Constitucional...">
+            <button class="btn btn-primary" onclick="addNewGoal()">+ Adicionar</button>
+          </div>
+
+          <div id="goalsList"></div>
         </div>
       </section>
 
-      <!-- VIEW: APP CELULAR & TABLET -->
+      <!-- VIEW 7: APP CELULAR & TABLET -->
       <section id="view-app" style="display: none;">
         <div class="view-header">
           <div class="view-title">
-            <h1>GooDraw no Celular e Tablet</h1>
-            <p>Acesse em qualquer tela com sincronização contínua na nuvem.</p>
+            <h1>GooDraw no Celular e Tablet 📱</h1>
+            <p>Seus estudos em qualquer tela com sincronização na nuvem.</p>
           </div>
         </div>
         <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:20px; padding:28px; line-height:1.8; max-width:700px;">
-          <h3 style="margin-bottom:12px; color:#38bdf8; font-size:18px;">📲 Como instalar como App (PWA) no Celular e Tablet:</h3>
+          <h3 style="margin-bottom:12px; color:#38bdf8; font-size:18px;">📲 Como instalar o GooDraw como App no Celular e Tablet:</h3>
           <p>1. No <strong>Chrome, Edge ou Safari</strong> do seu celular ou tablet, abra esta página.</p>
           <p>2. Toque no botão de <strong>três pontos (⋮)</strong> ou no ícone de <strong>Compartilhar</strong>.</p>
           <p>3. Toque em <strong>"Adicionar à tela de início"</strong> ou <strong>"Instalar aplicativo"</strong>.</p>
-          <p>4. Pronto! O ícone do GooDraw aparecerá na tela do seu aparelho como um app nativo, sem ocupar memória e com suporte a toque e caneta stylus.</p>
+          <p>4. Pronto! O ícone do GooDraw aparecerá na tela inicial como um app nativo, rápido, sem ocupar memória e com suporte a toque e caneta stylus.</p>
         </div>
       </section>
-
     </main>
   </div>
 
-  <!-- Zoom Modal -->
-  <div class="modal-overlay" id="zoomModal" onclick="closeModal()">
+  <!-- MODAL: NOVA QUESTÃO NO CADERNO DE ERROS -->
+  <div class="modal-overlay" id="modalNewQuestion" onclick="closeModal('modalNewQuestion')">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <h3 id="modalTitle" style="font-size: 16px;">Visualização da Questão</h3>
-        <button class="btn btn-secondary" style="padding: 4px 12px;" onclick="closeModal()">✕</button>
+        <h3>➕ Nova Questão no Caderno de Erros</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalNewQuestion')">✕</button>
       </div>
-      <div class="modal-img-wrap">
-        <img id="modalImg" src="" alt="Print">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Título / Assunto da Questão</label>
+          <input type="text" id="qTitle" class="form-control" placeholder="Ex: Princípio da Impessoalidade na Jurisprudência do STF">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label>Banca Examinadora</label>
+            <select id="qBanca" class="form-control">
+              <option value="FGV">FGV</option>
+              <option value="Cebraspe">Cebraspe / CESPE</option>
+              <option value="FCC">FCC</option>
+              <option value="Vunesp">Vunesp</option>
+              <option value="IBFC">IBFC</option>
+              <option value="Outras">Outras</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Disciplina</label>
+            <input type="text" id="qDisciplina" class="form-control" placeholder="Ex: Direito Administrativo">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Enunciado / Trecho da Questão</label>
+          <textarea id="qStatement" class="form-control" placeholder="Copie ou digite o texto da questão..."></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label>Alternativa que você marcou (Erro)</label>
+            <input type="text" id="qMarked" class="form-control" placeholder="Ex: Alternativa B">
+          </div>
+          <div class="form-group">
+            <label>Gabarito Oficial (Correta)</label>
+            <input type="text" id="qCorrect" class="form-control" placeholder="Ex: Alternativa D">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Por que você errou?</label>
+          <select id="qReason" class="form-control">
+            <option value="Pegadinha">⚠️ Pegadinha da Banca</option>
+            <option value="Atenção">💤 Falta de Atenção no Comando</option>
+            <option value="Conceito">📚 Conceito Não Estudado / Teoria</option>
+            <option value="Dúvida">🔀 Dúvida entre Duas Alternativas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>💡 O que eu aprendi para não errar mais:</label>
+          <textarea id="qExplanation" class="form-control" placeholder="Explicação rápida com a regra ou mnemônico..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="submitNewQuestion()">Salvar no Caderno de Erros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO FLASHCARD -->
+  <div class="modal-overlay" id="modalNewFlashcard" onclick="closeModal('modalNewFlashcard')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>➕ Criar Novo Flashcard</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalNewFlashcard')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Disciplina / Tema</label>
+          <input type="text" id="fcSubject" class="form-control" placeholder="Ex: Direito Constitucional - Art. 5º">
+        </div>
+        <div class="form-group">
+          <label>Frente do Card (Pergunta ou Omissão)</label>
+          <textarea id="fcFront" class="form-control" placeholder="Ex: Quais são os crimes inafiançáveis e imprescritíveis segundo a CF/88?"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Verso do Card (Resposta & Fundamento)</label>
+          <textarea id="fcBack" class="form-control" placeholder="Ex: Racismo e Ação de Grupos Armados (civis ou militares) contra a ordem constitucional. (Mnemônico: RA-GA)"></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="submitNewFlashcard()">Salvar Flashcard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO GRIFO DE LEI -->
+  <div class="modal-overlay" id="modalNewHighlight" onclick="closeModal('modalNewHighlight')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>➕ Adicionar Grifo de Legislação</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalNewHighlight')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Diploma Legal & Artigo</label>
+          <input type="text" id="hlTitle" class="form-control" placeholder="Ex: CF/88 - Art. 37, §6º">
+        </div>
+        <div class="form-group">
+          <label>Texto da Lei Grifado</label>
+          <textarea id="hlQuote" class="form-control" placeholder="Ex: As pessoas jurídicas de direito público e as de direito privado prestadoras de serviços públicos responderão pelos danos que seus agentes..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Categoria / Cor do Grifo</label>
+          <select id="hlColor" class="form-control">
+            <option value="yellow">🟡 Amarelo (Regra Geral)</option>
+            <option value="green">🟢 Verde (Conceito / Definição)</option>
+            <option value="red">🔴 Vermelho / Rosa (Exceção / Pegadinha)</option>
+            <option value="blue">🔵 Azul (Prazos / Competência)</option>
+            <option value="purple">🟣 Roxo (Súmula / Jurisprudência)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sua Anotação / Comentário</label>
+          <textarea id="hlNote" class="form-control" placeholder="Ex: Teoria do risco administrativo. Responsabilidade objetiva do Estado."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="submitNewHighlight()">Salvar Grifo de Lei</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ZOOM DE IMAGEM -->
+  <div class="modal-overlay" id="zoomModal" onclick="closeModal('zoomModal')">
+    <div class="modal-box" style="max-width:850px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="zoomModalTitle" style="font-size:16px;">Visualização do Print</h3>
+        <button class="btn btn-secondary" onclick="closeModal('zoomModal')">✕</button>
+      </div>
+      <div style="background:#000; padding:12px; display:grid; place-items:center;">
+        <img id="zoomModalImg" src="" style="max-width:100%; max-height:75vh; object-fit:contain; border-radius:8px;">
+      </div>
+      <div style="padding:14px 20px; display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn btn-secondary" id="btnCopyZoomImg" onclick="copyZoomImage()">📋 Copiar Imagem</button>
+        <button class="btn btn-secondary" id="btnDownloadZoomImg" onclick="downloadZoomImage()">⬇ Baixar PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONTA / LOGIN / CONFIRMAÇÃO POR EMAIL -->
+  <div class="modal-overlay" id="authModal" onclick="closeModal('authModal')">
+    <div class="modal-box" style="max-width:480px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="authModalTitle" style="font-size:17px; font-weight:800;">Sua Conta GooDraw Study Cloud</h3>
+        <button class="btn btn-secondary" onclick="closeModal('authModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="authTabsRow" style="display:flex; gap:10px; margin-bottom:10px;">
+          <button class="btn btn-primary" id="tabAuthSignup" style="flex:1;" onclick="setAuthMode('signup')">Criar Conta Grátis</button>
+          <button class="btn btn-secondary" id="tabAuthLogin" style="flex:1;" onclick="setAuthMode('login')">Já Tenho Conta</button>
+        </div>
+
+        <div id="authFormFields">
+          <div class="form-group">
+            <label>Seu E-mail</label>
+            <input type="email" id="authEmail" class="form-control" placeholder="seu@email.com">
+          </div>
+          <div class="form-group">
+            <label>Senha (mínimo 6 caracteres)</label>
+            <input type="password" id="authPassword" class="form-control" placeholder="••••••••">
+          </div>
+          <button class="btn btn-primary" id="btnSubmitAuth" style="width:100%; margin-top:8px;" onclick="submitAuth()">Criar Conta Grátis</button>
+        </div>
+
+        <div id="authResult" style="font-size:13.5px; font-weight:600; text-align:center;"></div>
+
+        <!-- Banner de Confirmação de E-mail -->
+        <div id="emailConfirmBanner" class="email-confirm-banner" style="display:none;">
+          <div style="font-size:20px; font-weight:800; margin-bottom:6px; color:#34d399;">📬 Quase lá! Confirme seu E-mail</div>
+          <p style="font-size:13.5px; line-height:1.5; color:#f1f5f9; margin-bottom:8px;">
+            Enviamos um link de confirmação para <strong id="registeredEmailDisplay"></strong>.
+          </p>
+          <p style="font-size:13px; line-height:1.5; color:#94a3b8; margin-bottom:14px;">
+            Abra seu e-mail e clique no link de ativação para sincronizar em todos os computadores, celulares e tablets. <em>(Confira também a pasta de Spam ou Lixo Eletrônico)</em>.
+          </p>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" style="font-size:12px; padding:6px 14px;" onclick="resendCurrentConfirmation()">Reenviar E-mail</button>
+            <button class="btn btn-primary" style="font-size:12px; padding:6px 14px;" onclick="setAuthMode('login')">Já Confirmei, Entrar</button>
+          </div>
+        </div>
+
+        <!-- Perfil do Usuário Conectado -->
+        <div id="userProfileBox" style="display:none; text-align:center; padding:10px 0;">
+          <div style="font-size:36px; margin-bottom:8px;">👤</div>
+          <h4 id="profileEmail" style="font-size:16px; margin-bottom:4px;"></h4>
+          <p style="color:#10b981; font-size:13px; font-weight:600; margin-bottom:18px;">🟢 Conectado e Sincronizado</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button class="btn btn-secondary" onclick="renderAll(); closeModal('authModal');">🔄 Sincronizar Agora</button>
+            <button class="btn btn-danger" onclick="logoutUser()">Sair da Conta</button>
+          </div>
+        </div>
+
+        <p style="color:var(--text-mute); font-size:12.5px; text-align:center; margin-top:8px;">
+          ✓ 100% gratuito e ilimitado para sempre. Seus estudos salvos na nuvem.
+        </p>
       </div>
     </div>
   </div>
 
   <script src="supabase-client.js"></script>
   <script>
-    // Navigation
+    const sync = window.SupabaseSyncService;
+    let authMode = 'signup';
+    let currentStudyCards = [];
+    let currentCardIndex = 0;
+
+    // Navegação entre Views (Imagem 3)
     const navItems = document.querySelectorAll('.nav-item');
     const sections = {
       dashboard: document.getElementById('view-dashboard'),
@@ -497,267 +1124,645 @@
       app: document.getElementById('view-app')
     };
 
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        navItems.forEach(n => n.classList.remove('active'));
-        item.classList.add('active');
-        const view = item.dataset.view;
-        Object.keys(sections).forEach(k => {
-          sections[k].style.display = k === view ? 'block' : 'none';
-        });
-        document.getElementById('sidebar').classList.remove('open');
+    function switchView(viewName) {
+      navItems.forEach(n => {
+        n.classList.toggle('active', n.dataset.view === viewName);
       });
+      Object.keys(sections).forEach(k => {
+        if (sections[k]) sections[k].style.display = k === viewName ? 'block' : 'none';
+      });
+      document.getElementById('sidebar').classList.remove('open');
+      if (viewName === 'flashcards') loadStudyCard();
+    }
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => switchView(item.dataset.view));
     });
 
     document.getElementById('btnToggleSidebar')?.addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('open');
     });
 
-    // Cloud Service integration
-    const sync = window.SupabaseSyncService;
+    // ──────────────────────── MODAIS ────────────────────────
+    function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
 
-    function updateStatusIndicator() {
-      // Indicador visual discreto de conexão ativa
+    function openNewQuestionModal() { openModal('modalNewQuestion'); }
+    function openNewFlashcardModal() { openModal('modalNewFlashcard'); }
+    function openNewHighlightModal() { openModal('modalNewHighlight'); }
+    function openUploadPrintModal() {
+      const url = prompt('Cole o link da imagem ou deixe em branco para simular print:');
+      if (url !== null) {
+        sync.saveScreenshot({
+          title: 'Print Importado de Questão',
+          imageDataUrl: url || 'icons/icon512.png',
+          note: 'Capturado pelo usuário',
+          isErrorNotebook: true
+        }).then(() => renderAll());
+      }
     }
 
-    // Modal Image
+    // ──────────────────────── ZOOM LIGHTBOX ────────────────────────
+    let currentZoomSrc = '';
     function openImageModal(title, src) {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalImg').src = src;
-      document.getElementById('zoomModal').classList.add('open');
+      document.getElementById('zoomModalTitle').textContent = title || 'Visualização do Print';
+      document.getElementById('zoomModalImg').src = src;
+      currentZoomSrc = src;
+      openModal('zoomModal');
     }
-    function closeModal() {
-      document.getElementById('zoomModal').classList.remove('open');
+    function copyZoomImage() {
+      navigator.clipboard.writeText(currentZoomSrc).then(() => {
+        alert('Link da imagem copiado para a área de transferência!');
+      });
+    }
+    function downloadZoomImage() {
+      const a = document.createElement('a');
+      a.href = currentZoomSrc;
+      a.download = 'goodraw-print-' + Date.now() + '.png';
+      a.click();
     }
 
-    // Render Cards
-    async function renderAll() {
-      const shots = await sync.listScreenshots();
-      document.getElementById('statPrints').textContent = shots.length;
-      document.getElementById('statErrors').textContent = shots.filter(s => s.is_error_notebook).length;
-
-      const gridRecent = document.getElementById('recentCardsGrid');
-      const gridCaderno = document.getElementById('cadernoGrid');
-      const gridPrints = document.getElementById('printsGrid');
-
-      gridRecent.innerHTML = '';
-      gridCaderno.innerHTML = '';
-      gridPrints.innerHTML = '';
-
-      if (shots.length === 0) {
-        gridRecent.innerHTML = '<p style="color:var(--text-mute); grid-column: 1/-1;">Nenhuma questão ou print registrado ainda. Use a ferramenta de recorte na página para salvar!</p>';
+    // ──────────────────────── AUTH & CONFIRMAÇÃO POR EMAIL ────────────────────────
+    function openAuthModal() {
+      const user = sync.getUser();
+      if (user && user.email) {
+        document.getElementById('authTabsRow').style.display = 'none';
+        document.getElementById('authFormFields').style.display = 'none';
+        document.getElementById('emailConfirmBanner').style.display = 'none';
+        document.getElementById('userProfileBox').style.display = 'block';
+        document.getElementById('profileEmail').textContent = user.email;
+      } else {
+        document.getElementById('userProfileBox').style.display = 'none';
+        document.getElementById('authTabsRow').style.display = 'flex';
+        document.getElementById('authFormFields').style.display = 'block';
+        document.getElementById('emailConfirmBanner').style.display = 'none';
+        setAuthMode('signup');
       }
-
-      
-      const gridFc = document.getElementById('flashcardsGrid');
-      if (gridFc) gridFc.innerHTML = '';
-      shots.forEach(s => {
-        if (gridFc) {
-          const fc = document.createElement('div');
-          fc.className = 'capture-card';
-          fc.innerHTML = `
-            <div class="card-thumb" onclick="openImageModal('${s.title.replace(/'/g, "\\'")}', '${s.image_url}')">
-              <img src="${s.image_url}" alt="${s.title}">
-              <span class="card-badge">🗂️ Flashcard</span>
-            </div>
-            <div class="card-content">
-              <div class="card-title">${s.title}</div>
-              <div class="card-note">${s.note || 'Clique no print para ampliar e resolver.'}</div>
-              <div class="card-footer">
-                <span>Frente: Pergunta / Verso: Resposta</span>
-                <button onclick="deleteCard('${s.id || s.created_at}', event)" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:2px 8px; border-radius:6px; cursor:pointer; font-size:11px;">🗑️ Excluir</button>
-              </div>
-            </div>
-          `;
-          gridFc.appendChild(fc);
-        }
-        // Render normal
-
-        const card = createCardEl(s);
-        gridPrints.appendChild(card.cloneNode(true));
-        if (s.is_error_notebook) gridCaderno.appendChild(card.cloneNode(true));
-      });
-
-      shots.slice(0, 6).forEach(s => {
-        gridRecent.appendChild(createCardEl(s));
-      });
-
-      // Highlights
-      const hls = await sync.listHighlights();
-      document.getElementById('statHighlights').textContent = hls.length;
-      const hList = document.getElementById('grifosList');
-      hList.innerHTML = '';
-      hls.forEach(h => {
-        const item = document.createElement('div');
-        item.style.cssText = 'background:var(--surface-card); padding:16px 20px; border-radius:14px; border:1px solid var(--border);';
-        item.innerHTML = `<blockquote style="border-left:4px solid #ffd43b; padding-left:12px; margin-bottom:8px; font-style:italic;">"${h.quote}"</blockquote>
-        <div style="font-size:12px; color:var(--text-mute);">Origem: ${h.url} • Nota: ${h.note || 'Sem nota'}</div>`;
-        hList.appendChild(item);
-      });
+      openModal('authModal');
     }
 
-    function createCardEl(s) {
-      const card = document.createElement('div');
-      card.className = 'capture-card';
-      const tagsHtml = (s.tags || []).map(t => `<span class="tag">#${t}</span>`).join('');
-      card.innerHTML = `
-        <div class="card-thumb" onclick="openImageModal('${s.title.replace(/'/g, "\\'")}', '${s.image_url}')">
-          <img src="${s.image_url}" alt="${s.title}">
-          <span class="card-badge">${s.is_error_notebook ? '📕 Caderno de Erros' : '📷 Print'}</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">${s.title}</div>
-          <div class="card-note">${s.note || 'Sem anotações adicionais'}</div>
-          <div class="card-tags">${tagsHtml}</div>
-          <div class="card-footer">
-            <span>${new Date(s.created_at).toLocaleDateString('pt-BR')}</span>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <a href="${s.url}" target="_blank" style="color:#a5b4fc; text-decoration:none;">🔗 Abrir</a>
-              <button onclick="deleteCard('${s.id || s.created_at}', event)" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:3px 9px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;" title="Excluir este item da nuvem">🗑️ Excluir</button>
-            </div>
-          </div>
-        </div>
-      `;
-      return card;
-    }
-
-    function loadSampleData() {
-      // Mock question print
-      const canvas = document.createElement('canvas');
-      canvas.width = 600; canvas.height = 360;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#1e1b4b'; ctx.fillRect(0,0,600,360);
-      ctx.fillStyle = '#c7d2fe'; ctx.font = 'bold 18px sans-serif';
-      ctx.fillText('FGV • Direito Constitucional (2026)', 30, 45);
-      ctx.fillStyle = '#ffffff'; ctx.font = '15px sans-serif';
-      ctx.fillText('Em relação aos direitos e garantias fundamentais...', 30, 90);
-      ctx.fillStyle = '#f87171';
-      ctx.fillRect(30, 130, 540, 36);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('A) A prática do racismo constitui crime inafiançável e imprescritível.', 40, 154);
-      // Drawing stroke simulation
-      ctx.strokeStyle = '#fde047'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(30, 160); ctx.lineTo(500, 160); ctx.stroke();
-      
-      const sampleUrl = canvas.toDataURL('image/png');
-      sync.saveScreenshot({
-        url: 'https://tecconcursos.com.br/questoes/12345',
-        title: 'FGV - Racismo e Imprescritibilidade',
-        imageDataUrl: sampleUrl,
-        note: 'Atenção aos prazos de prescrição e se cabe fiança!',
-        tags: ['DireitoConstitucional', 'FGV', 'Pegadinha'],
-        isErrorNotebook: true
-      }).then(() => {
-        renderAll();
-      });
-    }
-
-    function syncNow() {
-      renderAll();
-      alert('Sincronização concluída com o Supabase!');
-    }
-
-    
-    // ──────────────────────── EXCLUSÃO DE DADOS ────────────────────────
-    async function deleteCard(idOrDate, e) {
-      if (e) e.stopPropagation();
-      if (!confirm('Deseja realmente excluir este print/questão da nuvem?')) return;
-      await sync.deleteScreenshot(idOrDate);
-      await renderAll();
-    }
-
-    async function deleteHl(id, e) {
-      if (e) e.stopPropagation();
-      if (!confirm('Deseja excluir este grifo?')) return;
-      await sync.deleteHighlight(id);
-      await renderAll();
-    }
-
-    async function confirmClearAll() {
-      if (!confirm('⚠️ ATENÇÃO: Tem certeza que deseja apagar TODOS os seus prints, caderno de erros e anotações do site e do Supabase?\n\nEsta ação é definitiva.')) return;
-      await sync.clearAllData();
-      await renderAll();
-      alert('Todos os dados foram excluídos com sucesso!');
-    }
-
-    // ──────────────────────── CONTA & PAREAMENTO (IMAGENS 1 E 2) ────────────────────────
-    let authMode = 'signup';
-    function openAuthModal(code = '') {
-      document.getElementById('authModal').classList.add('open');
-      if (code) {
-        document.getElementById('authPairCode').value = code;
-      }
-    }
-    function closeAuthModal() {
-      document.getElementById('authModal').classList.remove('open');
-    }
     function setAuthMode(mode) {
       authMode = mode;
       document.getElementById('tabAuthSignup').className = mode === 'signup' ? 'btn btn-primary' : 'btn btn-secondary';
       document.getElementById('tabAuthLogin').className = mode === 'login' ? 'btn btn-primary' : 'btn btn-secondary';
       document.getElementById('btnSubmitAuth').textContent = mode === 'signup' ? 'Criar Conta Grátis' : 'Entrar na Conta';
-      document.getElementById('groupPairCode').style.display = mode === 'signup' ? 'block' : 'none';
       document.getElementById('authResult').textContent = '';
+      document.getElementById('emailConfirmBanner').style.display = 'none';
     }
 
+    let lastRegisteredEmail = '';
     async function submitAuth() {
       const email = document.getElementById('authEmail').value.trim();
       const password = document.getElementById('authPassword').value.trim();
-      const pairCode = document.getElementById('authPairCode').value.trim();
       const resEl = document.getElementById('authResult');
 
       if (!email || !password) {
-        resEl.style.color = '#f87171';
-        resEl.textContent = 'Por favor, preencha e-mail e senha.';
+        resEl.style.color = '#f43f5e';
+        resEl.textContent = 'Por favor, informe e-mail e senha.';
+        return;
+      }
+      if (password.length < 6) {
+        resEl.style.color = '#f43f5e';
+        resEl.textContent = 'A senha deve ter pelo menos 6 caracteres.';
         return;
       }
 
       resEl.style.color = '#fbbf24';
-      resEl.textContent = 'Conectando ao Supabase...';
+      resEl.textContent = 'Processando com Supabase Cloud...';
 
       try {
         if (authMode === 'signup') {
-          await sync.signUp(email, password);
-          resEl.style.color = '#34d399';
-          resEl.textContent = 'Conta criada com sucesso! Sincronizando...';
+          lastRegisteredEmail = email;
+          const res = await sync.signUp(email, password);
+          resEl.textContent = '';
+          document.getElementById('authFormFields').style.display = 'none';
+          document.getElementById('registeredEmailDisplay').textContent = email;
+          document.getElementById('emailConfirmBanner').style.display = 'block';
         } else {
           await sync.signIn(email, password);
           resEl.style.color = '#34d399';
-          resEl.textContent = 'Login realizado com sucesso!';
+          resEl.textContent = 'Login realizado com sucesso! Sincronizando...';
+          setTimeout(() => {
+            closeModal('authModal');
+            checkUserAuth();
+            renderAll();
+          }, 800);
         }
-        setTimeout(() => {
-          closeAuthModal();
-          checkUserAuth();
-          renderAll();
-        }, 1000);
       } catch (err) {
-        resEl.style.color = '#f87171';
-        resEl.textContent = err.message || 'Erro ao conectar conta';
+        resEl.style.color = '#f43f5e';
+        resEl.textContent = err.message || 'Erro na autenticação. Verifique os dados.';
       }
+    }
+
+    async function resendCurrentConfirmation() {
+      if (!lastRegisteredEmail) return;
+      try {
+        await sync.resendConfirmationEmail(lastRegisteredEmail);
+        alert('E-mail de confirmação reenviado para ' + lastRegisteredEmail + '!');
+      } catch (e) {
+        alert('Erro ao reenviar: ' + (e.message || e));
+      }
+    }
+
+    async function logoutUser() {
+      await sync.signOut();
+      closeModal('authModal');
+      checkUserAuth();
+      renderAll();
     }
 
     function checkUserAuth() {
       const user = sync.getUser();
       const btn = document.getElementById('btnAuthAccount');
-      if (btn) {
-        if (user && user.email) {
-          btn.textContent = '👤 ' + user.email.split('@')[0];
-          btn.title = 'Conectado como: ' + user.email;
-        } else {
-          btn.textContent = '👤 Criar Conta / Entrar';
-        }
+      const badge = document.getElementById('statusBadge');
+      if (user && user.email) {
+        btn.textContent = '👤 ' + user.email.split('@')[0];
+        btn.classList.replace('btn-primary', 'btn-secondary');
+        badge.className = 'status-badge';
+        badge.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span> <span>' + user.email.split('@')[0] + ' (Nuvem)</span>';
+      } else {
+        btn.textContent = '👤 Criar Conta / Entrar';
+        btn.classList.replace('btn-secondary', 'btn-primary');
+        badge.className = 'status-badge offline';
+        badge.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#94a3b8; display:inline-block;"></span> <span>Modo Local Grátis</span>';
       }
     }
 
-    // ──────────────────────── TIMER POMODORO ────────────────────────
+    // ──────────────────────── SUBMITS DE DADOS ────────────────────────
+    async function submitNewQuestion() {
+      const title = document.getElementById('qTitle').value.trim();
+      const banca = document.getElementById('qBanca').value;
+      const disciplina = document.getElementById('qDisciplina').value.trim();
+      const statement = document.getElementById('qStatement').value.trim();
+      const marked = document.getElementById('qMarked').value.trim();
+      const correct = document.getElementById('qCorrect').value.trim();
+      const reason = document.getElementById('qReason').value;
+      const explanation = document.getElementById('qExplanation').value.trim();
+
+      if (!title && !statement) {
+        alert('Preencha pelo menos o título ou enunciado da questão.');
+        return;
+      }
+
+      await sync.saveErrorQuestion({
+        title: title || 'Questão ' + banca,
+        banca,
+        disciplina: disciplina || 'Geral',
+        statement,
+        marked_option: marked,
+        correct_option: correct,
+        error_reason: reason,
+        explanation
+      });
+
+      closeModal('modalNewQuestion');
+      // Limpar campos
+      document.getElementById('qTitle').value = '';
+      document.getElementById('qStatement').value = '';
+      document.getElementById('qExplanation').value = '';
+      await renderAll();
+      switchView('caderno');
+    }
+
+    async function submitNewFlashcard() {
+      const subject = document.getElementById('fcSubject').value.trim();
+      const front = document.getElementById('fcFront').value.trim();
+      const back = document.getElementById('fcBack').value.trim();
+
+      if (!front || !back) {
+        alert('Preencha a frente e o verso do flashcard.');
+        return;
+      }
+
+      await sync.saveFlashcard({
+        subject: subject || 'Geral',
+        front,
+        back
+      });
+
+      closeModal('modalNewFlashcard');
+      document.getElementById('fcFront').value = '';
+      document.getElementById('fcBack').value = '';
+      await renderAll();
+      switchView('flashcards');
+    }
+
+    async function submitNewHighlight() {
+      const title = document.getElementById('hlTitle').value.trim();
+      const quote = document.getElementById('hlQuote').value.trim();
+      const color = document.getElementById('hlColor').value;
+      const note = document.getElementById('hlNote').value.trim();
+
+      if (!quote) {
+        alert('Informe o texto do artigo ou lei.');
+        return;
+      }
+
+      await sync.saveHighlight({
+        url: window.location.href,
+        quote: (title ? `[${title}] ` : '') + quote,
+        color,
+        note
+      });
+
+      closeModal('modalNewHighlight');
+      document.getElementById('hlTitle').value = '';
+      document.getElementById('hlQuote').value = '';
+      document.getElementById('hlNote').value = '';
+      await renderAll();
+      switchView('grifos');
+    }
+
+    // ──────────────────────── RENDERIZAÇÃO COMPLETA ────────────────────────
+    async function renderAll() {
+      // 1. Prints
+      const shots = await sync.listScreenshots();
+      document.getElementById('statPrints').textContent = shots.length;
+
+      // 2. Caderno de Erros
+      const errors = await sync.listErrorQuestions();
+      document.getElementById('statErrors').textContent = errors.length;
+
+      // 3. Flashcards
+      const cards = await sync.listFlashcards();
+      document.getElementById('statFlashcards').textContent = cards.length;
+      currentStudyCards = cards;
+
+      // 4. Grifos
+      const grifos = await sync.listHighlights();
+      document.getElementById('statGrifos').textContent = grifos.length;
+
+      // 5. Pomodoro
+      const pomo = sync.getPomodoroStats();
+      document.getElementById('statPomodoro').textContent = pomo.cycles || 0;
+
+      // Renderizar grids
+      renderCadernoGrid(errors);
+      renderPrintsGrid(shots);
+      renderGrifosList(grifos);
+      renderFlashcardsGrid(cards);
+      renderRecentFeed(shots, errors);
+      renderBancaDistribution(errors);
+      renderGoals();
+    }
+
+    function renderCadernoGrid(list) {
+      const container = document.getElementById('cadernoGrid');
+      if (!container) return;
+      if (list.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--text-mute); background:var(--surface-card); border-radius:18px;">Nenhuma questão registrada ainda. Clique no botão acima para adicionar sua primeira questão!</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(q => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="badge-pill badge-${(q.banca||'fgv').toLowerCase()}">${q.banca || 'Geral'}</span>
+            <span class="badge-pill ${q.is_resolved ? 'badge-status-resolvido' : 'badge-status-pendente'}">
+              ${q.is_resolved ? '🟢 Revisada' : '🔴 Pendente'}
+            </span>
+          </div>
+          <div class="item-body">
+            <div class="item-title">${q.title}</div>
+            <div style="font-size:12px; color:#a5b4fc; font-weight:600;">📚 ${q.disciplina || 'Geral'} · ⚠️ ${q.error_reason || 'Pegadinha'}</div>
+            ${q.statement ? `<div class="item-desc">${q.statement.substring(0, 180)}...</div>` : ''}
+            ${q.marked_option || q.correct_option ? `
+              <div style="display:flex; gap:10px; font-size:12px;">
+                <span style="color:#fda4af;">Sua resposta: <b>${q.marked_option || 'N/A'}</b></span>
+                <span style="color:#34d399;">Gabarito: <b>${q.correct_option || 'N/A'}</b></span>
+              </div>
+            ` : ''}
+            ${q.explanation ? `
+              <div class="item-highlight-box">
+                <b>💡 Fixação:</b> ${q.explanation}
+              </div>
+            ` : ''}
+          </div>
+          <div class="item-footer">
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:11.5px;" onclick="toggleResolved('${q.id}')">
+              ${q.is_resolved ? '↺ Marcar Pendente' : '✔ Fixada'}
+            </button>
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:11.5px;" onclick="convertQuestionToFlashcard('${q.id}')">
+              🗂️ Virar Card
+            </button>
+            <button class="btn btn-danger" style="padding:4px 10px; font-size:11.5px;" onclick="deleteQuestion('${q.id}')">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleResolved(id) {
+      await sync.toggleErrorQuestionStatus(id);
+      await renderAll();
+    }
+
+    async function deleteQuestion(id) {
+      if (!confirm('Deseja excluir esta questão do caderno de erros?')) return;
+      await sync.deleteErrorQuestion(id);
+      await renderAll();
+    }
+
+    async function convertQuestionToFlashcard(id) {
+      const list = await sync.listErrorQuestions();
+      const q = list.find(x => x.id === id);
+      if (!q) return;
+      await sync.saveFlashcard({
+        subject: q.disciplina || q.banca,
+        front: q.title + '\n\n' + (q.statement || ''),
+        back: `Gabarito Correto: ${q.correct_option}\n\nExplicação: ${q.explanation}`
+      });
+      alert('Questão convertida em Flashcard com sucesso!');
+      await renderAll();
+    }
+
+    function filterCaderno() {
+      const search = document.getElementById('searchCaderno').value;
+      const banca = document.getElementById('filterBanca').value;
+      const error_reason = document.getElementById('filterMotivo').value;
+      const status = document.getElementById('filterStatus').value;
+
+      sync.listErrorQuestions({ search, banca, error_reason, status }).then(renderCadernoGrid);
+    }
+
+    function renderPrintsGrid(list) {
+      const container = document.getElementById('printsGrid');
+      if (!container) return;
+      if (list.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--text-mute); background:var(--surface-card); border-radius:18px;">Nenhum print salvo ainda. Use o GooDraw em qualquer questão para recortar e enviar para cá!</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(s => `
+        <div class="item-card">
+          <div class="item-thumb" onclick="openImageModal('${(s.title||'').replace(/'/g, "\\'")}', '${s.image_url}')">
+            <img src="${s.image_url}" alt="${s.title}">
+            <span class="badge-pill" style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.7); color:#38bdf8;">
+              ${s.is_error_notebook ? '📕 Caderno' : '📷 Print'}
+            </span>
+          </div>
+          <div class="item-body" style="padding-top:14px;">
+            <div class="item-title">${s.title || 'Recorte de Questão'}</div>
+            ${s.note ? `<div class="item-desc">${s.note}</div>` : ''}
+          </div>
+          <div class="item-footer">
+            <span>${new Date(s.created_at).toLocaleDateString()}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="openImageModal('${(s.title||'').replace(/'/g, "\\'")}', '${s.image_url}')">🔍 Zoom</button>
+              <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deletePrint('${s.id || s.created_at}')">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function deletePrint(id) {
+      if (!confirm('Excluir este print?')) return;
+      await sync.deleteScreenshot(id);
+      await renderAll();
+    }
+
+    function filterPrints() {
+      const term = document.getElementById('searchPrints').value.toLowerCase();
+      sync.listScreenshots().then(shots => {
+        const filtered = shots.filter(s => (s.title + ' ' + (s.note||'')).toLowerCase().includes(term));
+        renderPrintsGrid(filtered);
+      });
+    }
+
+    function renderGrifosList(list) {
+      const container = document.getElementById('grifosList');
+      if (!container) return;
+      if (list.length === 0) {
+        container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-mute); background:var(--surface-card); border-radius:18px;">Nenhum grifo salvo ainda. Adicione leis e súmulas importantes para consulta rápida!</div>';
+        return;
+      }
+
+      const colorMap = {
+        yellow: { bg: 'rgba(245, 158, 11, 0.15)', border: '#f59e0b', name: '🟡 Regra Geral' },
+        green: { bg: 'rgba(16, 185, 129, 0.15)', border: '#10b981', name: '🟢 Conceito' },
+        red: { bg: 'rgba(244, 63, 94, 0.15)', border: '#f43f5e', name: '🔴 Exceção / Pegadinha' },
+        blue: { bg: 'rgba(56, 189, 248, 0.15)', border: '#38bdf8', name: '🔵 Prazos' },
+        purple: { bg: 'rgba(167, 139, 250, 0.15)', border: '#a78bfa', name: '🟣 Súmula' }
+      };
+
+      container.innerHTML = list.map(g => {
+        const c = colorMap[g.color] || colorMap.yellow;
+        return `
+          <div style="background:var(--surface-card); border:1px solid var(--border); border-left:4px solid ${c.border}; border-radius:14px; padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+            <div style="flex:1;">
+              <span class="badge-pill" style="background:${c.bg}; color:${c.border}; margin-bottom:8px; display:inline-block;">${c.name}</span>
+              <div style="font-size:15px; font-weight:600; line-height:1.5; color:#f8fafc; margin-bottom:8px;">${g.quote}</div>
+              ${g.note ? `<div style="font-size:13px; color:#cbd5e1; background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:8px;">💡 <b>Anotação:</b> ${g.note}</div>` : ''}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <button class="btn btn-secondary" style="padding:6px 10px; font-size:11.5px;" onclick="copyText('${g.quote.replace(/'/g, "\\'")}')">📋 Copiar</button>
+              <button class="btn btn-danger" style="padding:6px 10px; font-size:11.5px;" onclick="deleteHighlightItem('${g.id}')">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function copyText(txt) {
+      navigator.clipboard.writeText(txt).then(() => alert('Artigo copiado para a área de transferência!'));
+    }
+
+    async function deleteHighlightItem(id) {
+      if (!confirm('Excluir este grifo?')) return;
+      await sync.deleteHighlight(id);
+      await renderAll();
+    }
+
+    function filterGrifos() {
+      const search = document.getElementById('searchGrifos').value.toLowerCase();
+      const cor = document.getElementById('filterCorGrifo').value;
+      sync.listHighlights().then(list => {
+        let f = list;
+        if (cor !== 'todas') f = f.filter(g => g.color === cor);
+        if (search) f = f.filter(g => (g.quote + ' ' + (g.note||'')).toLowerCase().includes(search));
+        renderGrifosList(f);
+      });
+    }
+
+    // ──────────────────────── FLASHCARDS ────────────────────────
+    function renderFlashcardsGrid(cards) {
+      const container = document.getElementById('flashcardsGrid');
+      if (!container) return;
+      if (cards.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--text-mute); background:var(--surface-card); border-radius:18px;">Nenhum flashcard criado ainda. Crie flashcards para praticar a recuperação ativa da memória!</div>';
+        document.getElementById('studyCardContainer').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('studyCardContainer').style.display = 'block';
+      loadStudyCard();
+
+      container.innerHTML = cards.map(c => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="badge-pill badge-fgv">${c.subject || 'Geral'}</span>
+            <span style="font-size:11px; color:var(--text-mute);">Revisado ${c.review_count || 0}x</span>
+          </div>
+          <div class="item-body">
+            <div style="font-size:14.5px; font-weight:700; color:#f8fafc;">Q: ${c.front}</div>
+            <div style="font-size:13.5px; color:#34d399; margin-top:8px;">R: ${c.back}</div>
+          </div>
+          <div class="item-footer">
+            <span>Intervalo: ${c.interval_days || 1} dia(s)</span>
+            <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteFlashcardItem('${c.id}')">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function loadStudyCard() {
+      if (!currentStudyCards || currentStudyCards.length === 0) return;
+      if (currentCardIndex >= currentStudyCards.length) currentCardIndex = 0;
+      const c = currentStudyCards[currentCardIndex];
+      document.getElementById('cardSubjectBadge').textContent = c.subject || 'Flashcard';
+      document.getElementById('cardFrontText').textContent = c.front;
+      document.getElementById('cardBackText').textContent = c.back;
+      document.getElementById('studyCardInner').classList.remove('flipped');
+    }
+
+    function flipStudyCard() {
+      document.getElementById('studyCardInner').classList.toggle('flipped');
+    }
+
+    async function gradeCurrentCard(quality) {
+      if (!currentStudyCards || currentStudyCards.length === 0) return;
+      const c = currentStudyCards[currentCardIndex];
+      await sync.reviewFlashcard(c.id, quality);
+      currentCardIndex++;
+      if (currentCardIndex >= currentStudyCards.length) {
+        alert('🎉 Parabéns! Você concluiu a rodada de revisão destes flashcards.');
+        currentCardIndex = 0;
+      }
+      loadStudyCard();
+      renderAll();
+    }
+
+    async function deleteFlashcardItem(id) {
+      if (!confirm('Excluir este flashcard?')) return;
+      await sync.deleteFlashcard(id);
+      await renderAll();
+    }
+
+    // ──────────────────────── RECENT FEED & BANCAS ────────────────────────
+    function renderRecentFeed(shots, errors) {
+      const feed = document.getElementById('recentCardsGrid');
+      if (!feed) return;
+      const combined = [
+        ...errors.map(e => ({ type: 'error', data: e, date: new Date(e.created_at) })),
+        ...shots.map(s => ({ type: 'shot', data: s, date: new Date(s.created_at) }))
+      ].sort((a, b) => b.date - a.date).slice(0, 6);
+
+      if (combined.length === 0) {
+        feed.innerHTML = '<div style="grid-column:1/-1; padding:30px; text-align:center; color:var(--text-mute);">Nenhuma atividade recente registrada. Comece criando questões ou prints!</div>';
+        return;
+      }
+
+      feed.innerHTML = combined.map(item => {
+        if (item.type === 'error') {
+          return `
+            <div class="item-card">
+              <div class="item-header">
+                <span class="badge-pill badge-fgv">${item.data.banca}</span>
+                <span class="badge-pill ${item.data.is_resolved ? 'badge-status-resolvido' : 'badge-status-pendente'}">${item.data.is_resolved ? 'Revisada' : 'Pendente'}</span>
+              </div>
+              <div class="item-body">
+                <div class="item-title">${item.data.title}</div>
+                <div class="item-desc">${(item.data.statement||'').substring(0, 140)}...</div>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="item-card">
+              <div class="item-thumb" onclick="openImageModal('${(item.data.title||'').replace(/'/g, "\\'")}', '${item.data.image_url}')">
+                <img src="${item.data.image_url}">
+              </div>
+              <div class="item-body" style="padding-top:10px;">
+                <div class="item-title">${item.data.title}</div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    function renderBancaDistribution(errors) {
+      const el = document.getElementById('bancaDistributionBars');
+      if (!el) return;
+      if (errors.length === 0) {
+        el.innerHTML = '<div style="font-size:13px; color:var(--text-mute);">Nenhuma questão registrada ainda. Adicione sua primeira questão no Caderno de Erros!</div>';
+        return;
+      }
+      const counts = {};
+      errors.forEach(e => { const b = e.banca || 'Outras'; counts[b] = (counts[b] || 0) + 1; });
+      const total = errors.length;
+
+      el.innerHTML = Object.keys(counts).map(b => {
+        const pct = Math.round((counts[b] / total) * 100);
+        return `
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px;">
+              <b>${b}</b> <span>${counts[b]} questão (${pct}%)</span>
+            </div>
+            <div style="height:8px; background:rgba(255,255,255,0.08); border-radius:99px; overflow:hidden;">
+              <div style="width:${pct}%; height:100%; background:var(--accent-grad); border-radius:99px;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ──────────────────────── POMODORO & PLANNER ────────────────────────
     let timerSecs = 25 * 60;
     let timerInterval = null;
+    let currentModeMinutes = 25;
+
+    function setTimerMode(mins, label) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      currentModeMinutes = mins;
+      timerSecs = mins * 60;
+      updateTimerDisplay();
+      document.getElementById('btnTimer').textContent = '▶ Iniciar Foco';
+      document.getElementById('timerModeLabel').textContent = 'Ciclo ativo: ' + label + '.';
+      ['btnMode25', 'btnMode50', 'btnMode5', 'btnMode15'].forEach(id => {
+        document.getElementById(id)?.classList.remove('btn-primary');
+      });
+      event?.target?.classList.add('btn-primary');
+    }
+
     function updateTimerDisplay() {
       const m = Math.floor(timerSecs / 60).toString().padStart(2, '0');
       const s = (timerSecs % 60).toString().padStart(2, '0');
       const el = document.getElementById('timerDisplay');
       if (el) el.textContent = `${m}:${s}`;
     }
+
+    function playChimeSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, now + i * 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.6);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + i * 0.15);
+          osc.stop(now + i * 0.15 + 0.7);
+        });
+      } catch (e) {}
+    }
+
     function toggleTimer() {
       const btn = document.getElementById('btnTimer');
       if (timerInterval) {
@@ -773,36 +1778,89 @@
           } else {
             clearInterval(timerInterval);
             timerInterval = null;
-            alert('⏰ Ciclo concluído! Faça uma pausa de 5 minutos.');
+            playChimeSound();
+            sync.recordPomodoro(currentModeMinutes);
+            renderAll();
+            alert('⏰ Ciclo concluído! Excelente dedicação aos estudos.');
             resetTimer();
           }
         }, 1000);
       }
     }
+
     function resetTimer() {
       clearInterval(timerInterval);
       timerInterval = null;
-      timerSecs = 25 * 60;
+      timerSecs = currentModeMinutes * 60;
       updateTimerDisplay();
       const btn = document.getElementById('btnTimer');
-      if (btn) btn.textContent = '▶ Iniciar';
+      if (btn) btn.textContent = '▶ Iniciar Foco';
+    }
+
+    // ──────────────────────── METAS SEMANAIS (PLANNER) ────────────────────────
+    async function renderGoals() {
+      const list = await sync.listGoals();
+      const container = document.getElementById('goalsList');
+      if (!container) return;
+      if (list.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-mute); font-size:13px; text-align:center; padding:10px;">Nenhuma meta adicionada para esta semana.</div>';
+        document.getElementById('goalsProgressLabel').textContent = '0% Concluído';
+        return;
+      }
+
+      const doneCount = list.filter(g => g.completed).length;
+      const pct = Math.round((doneCount / list.length) * 100);
+      document.getElementById('goalsProgressLabel').textContent = `${pct}% Concluído (${doneCount}/${list.length})`;
+
+      container.innerHTML = list.map(g => `
+        <div class="goal-item ${g.completed ? 'done' : ''}">
+          <input type="checkbox" class="goal-checkbox" ${g.completed ? 'checked' : ''} onchange="toggleGoalItem('${g.id}')">
+          <span style="flex:1; font-size:14px;">${g.text}</span>
+          <button style="background:none; border:none; color:var(--text-mute); cursor:pointer; font-size:14px;" onclick="deleteGoalItem('${g.id}')">✕</button>
+        </div>
+      `).join('');
+    }
+
+    async function addNewGoal() {
+      const inp = document.getElementById('newGoalInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      await sync.saveGoal({ text: val });
+      inp.value = '';
+      await renderGoals();
+    }
+
+    async function toggleGoalItem(id) {
+      await sync.toggleGoal(id);
+      await renderGoals();
+    }
+
+    async function deleteGoalItem(id) {
+      await sync.deleteGoal(id);
+      await renderGoals();
+    }
+
+    // ──────────────────────── EXCLUIR TUDO ────────────────────────
+    async function confirmClearAll() {
+      if (!confirm('⚠️ ATENÇÃO: Tem certeza que deseja apagar TODOS os seus prints, caderno de erros, anotações e flashcards do site e do Supabase?\n\nEsta ação é definitiva.')) return;
+      await sync.clearAllData();
+      await renderAll();
+      alert('Todos os dados foram excluídos com sucesso!');
     }
 
     // ──────────────────────── ROTEAMENTO DE HASH ────────────────────────
-    function switchView(viewName) {
-      navItems.forEach(n => {
-        n.classList.toggle('active', n.dataset.view === viewName);
-      });
-      Object.keys(sections).forEach(k => {
-        if (sections[k]) sections[k].style.display = k === viewName ? 'block' : 'none';
-      });
-    }
-
     function handleHashRoute() {
       const hash = window.location.hash || '';
-      if (hash.startsWith('#/conectar/')) {
-        const code = hash.replace('#/conectar/', '').trim();
-        openAuthModal(code);
+      if (hash.includes('access_token=') && hash.includes('type=signup')) {
+        // Confirmação de e-mail automática via token retornado pelo Supabase
+        const params = new URLSearchParams(hash.substring(1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token) {
+          sync.saveSession({ access_token, refresh_token, user: { email: 'Confirmado' } });
+          alert('🎉 E-mail confirmado com sucesso! Bem-vindo ao GooDraw Study Cloud.');
+          history.replaceState(null, null, 'dashboard.html');
+        }
       } else if (hash.includes('flashcards')) {
         switchView('flashcards');
       } else if (hash.includes('planner') || hash.includes('planejamento')) {
@@ -811,57 +1869,19 @@
         switchView('app');
       } else if (hash.includes('grifos') || hash.includes('/m')) {
         switchView('grifos');
+      } else if (hash.includes('caderno')) {
+        switchView('caderno');
+      } else if (hash.includes('prints')) {
+        switchView('prints');
       }
     }
 
     window.addEventListener('hashchange', handleHashRoute);
-
     window.addEventListener('DOMContentLoaded', () => {
       checkUserAuth();
       handleHashRoute();
-
-      updateStatusIndicator();
       renderAll();
     });
   </script>
-
-  <!-- Modal de Conta / Login / Pareamento (Imagens 1 e 2) -->
-  <div class="modal-overlay" id="authModal" onclick="closeAuthModal()">
-    <div class="modal-box" style="max-width:480px;" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3 id="authModalTitle" style="font-size: 17px; font-weight:800;">Guarde tudo na sua conta 100% grátis</h3>
-        <button class="btn btn-secondary" style="padding: 4px 12px;" onclick="closeAuthModal()">✕</button>
-      </div>
-      <div style="padding: 24px;">
-        <p style="color:var(--text-mute); font-size:13.5px; margin-bottom:16px;">
-          ✓ 100% grátis e ilimitado, sem cartão.<br>
-          ✓ Em qualquer computador, celular ou tablet.<br>
-          ✓ Sincronização contínua com seu banco Supabase.
-        </p>
-        <div style="display:flex; gap:10px; margin-bottom:18px;">
-          <button class="btn btn-primary" id="tabAuthSignup" style="flex:1;" onclick="setAuthMode('signup')">Criar conta grátis</button>
-          <button class="btn btn-secondary" id="tabAuthLogin" style="flex:1;" onclick="setAuthMode('login')">Já tenho conta</button>
-        </div>
-        <div class="form-group">
-          <label>E-mail</label>
-          <input type="email" id="authEmail" class="form-control" placeholder="seu@email.com">
-        </div>
-        <div class="form-group">
-          <label>Senha</label>
-          <input type="password" id="authPassword" class="form-control" placeholder="Sua senha">
-        </div>
-        <div class="form-group" id="groupPairCode">
-          <label>Código de Pareamento da Extensão (Opcional)</label>
-          <input type="text" id="authPairCode" class="form-control" placeholder="Ex: 3A7 - QFG" style="font-family:monospace; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">
-          <div class="help-text">Vincule a extensão ao seu painel instantaneamente.</div>
-        </div>
-        <div style="margin-top:20px;">
-          <button class="btn btn-primary" id="btnSubmitAuth" style="width:100%;" onclick="submitAuth()">Criar Conta Grátis</button>
-        </div>
-        <div id="authResult" style="margin-top:14px; font-size:13.5px; font-weight:700; text-align:center;"></div>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>

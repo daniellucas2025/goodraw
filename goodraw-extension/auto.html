@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>GooDraw</title>
+<style>
+  :root { color-scheme: light dark; --bg:#fff; --fg:#2a2a35; --mute:#6b6b7b; --line:#e4e4ee; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1c24; --fg:#ececf3; --mute:#a3a3b5; --line:#33333f; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:'Segoe UI',Arial,sans-serif; }
+  main { padding:26px 28px; display:flex; flex-direction:column; gap:14px; }
+  header { display:flex; align-items:center; gap:10px; font-weight:700; font-size:15px; }
+  header img { width:28px; height:28px; }
+  h1 { font-size:17px; line-height:1.35; margin:0; }
+  h1 b { color:#6a3dff; }
+  p { margin:0; color:var(--mute); font-size:13px; line-height:1.5; }
+  .row { display:flex; gap:8px; margin-top:6px; }
+  button { flex:1; height:40px; border-radius:10px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  #ok { border:none; color:#fff; background:linear-gradient(90deg,#4a4aff,#8b3dff); }
+  #no { border:1.5px solid var(--line); background:transparent; color:var(--fg); font-weight:600; }
+  #msg { font-weight:700; font-size:14px; }
+  #msg.good { color:#16a34a; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="icons/icon48.png" alt="">GooDraw</header>
+  <h1><span id="askA">Abrir sozinha sempre que você entrar em</span> <b id="host"></b><span id="askB">?</span></h1>
+  <p id="why">O navegador vai pedir permissão para a extensão funcionar nesse site. Dá para desligar quando quiser, nas Configurações da barra.</p>
+  <div class="row" id="btns">
+    <button id="no">Agora não</button>
+    <button id="ok">Permitir</button>
+  </div>
+  <div id="msg" hidden></div>
+</main>
+<script src="auto.js"></script>
+</body>
+</html>

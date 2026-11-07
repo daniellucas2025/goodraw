@@ -138,32 +138,20 @@
   // ─── the cloud ────────────────────────────────────────────────────────────
   let st = {};
   async function paintCloud() {
-    st = await send({ action: 'hl.status' });
+    st = await send({ action: 'hl.status' }) || {};
     const c = $('cloud');
+    if (!c) return;
     c.className = 'cloud';
     const icon = `<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><i></i></span>`;
-    // Connected by the site straight (one login) or the pair gone: no more asking.
-    if (!st.pairing) { paintPair(''); clearInterval(paintCloud.poll); }
-    if (st.user && paintCloud.waiting) toast(tr('linked', st.user));
-    paintCloud.waiting = !!st.pairing;
+    paintPair('');
     if (st.user) {
-      const pct = st.quota ? Math.min(100, Math.round((st.used || 0) / st.quota * 100)) : 0;
-      const lv = st.space === 'full' ? 'full' : pct >= 80 ? 'near' : '';
-      c.classList.add(lv === 'full' ? 'full' : 'on');
-      c.innerHTML = `${icon}<span class="t"><b>${esc(lv === 'full' ? tr('cloudFull') : tr('cloudOn'))} · ${esc(st.phase === 'syncing' ? tr('syncing') : st.error === 'other_account' ? tr('otherAcc') : tr('synced'))}</b>
-        <span>${esc(st.user)}${st.quota ? ' · ' + esc(tr('used', mb(st.used || 0), mb(st.quota))) : ''}</span>
-        ${st.quota ? `<span class="use ${lv}"><i style="width:${pct}%"></i></span>` : ''}</span><span class="chev">⋯</span>`;
+      c.classList.add('on');
+      c.innerHTML = `${icon}<span class="t"><b>${esc(tr('cloudOn'))}</b><span>${esc(st.user)}</span></span><span class="chev">⋯</span>`;
       $('cloudMenu').innerHTML = `<button data-c="open">${esc(tr('open'))}</button><button data-c="sync">${esc(tr('syncNow'))}</button>
         <button data-c="more">${esc(tr('more'))}</button><button data-c="disconnect" class="danger">${esc(tr('disconnect'))}</button>`;
-    } else if (st.pairing) {
-      paintPair(st.pairCode);
-      c.innerHTML = `${icon}<span class="t"><b>${esc(tr('cloudWait'))}</b>${st.pairCode ? `<span class="code">${esc(st.pairCode)}</span>` : ''}</span><span class="chev">⋯</span>`;
-      $('cloudMenu').innerHTML = `<button data-c="connect">${esc(tr('reconnect'))}</button>`;
-      clearInterval(paintCloud.poll);
-      paintCloud.poll = setInterval(async () => { const r = await send({ action: 'hl.pairCheck' }); if (r.ok) { clearInterval(paintCloud.poll); paintCloud(); } }, 2500);
     } else {
       c.innerHTML = `${icon}<span class="t"><b>${esc(tr('cloudOff'))}</b><span>${esc(tr('cloudOffB'))}</span></span><span class="chev">›</span>`;
-      $('cloudMenu').innerHTML = '';
+      $('cloudMenu').innerHTML = `<button data-c="connect">${esc(tr('cloudOffB'))}</button>`;
     }
   }
   async function connect() {
@@ -195,13 +183,11 @@
     paintAllow(); toast(tr('allowDone'));
   }
 
-  // While connecting: the code to type on the site, big, with Copiar.
+  // While connecting: the code to type on the site (banner removed).
   function paintPair(code) {
     const box = $('pairBox');
-    if (!code) { box.hidden = true; box.innerHTML = ''; return; }
-    box.hidden = false;
-    box.innerHTML = `<div class="pb-t"><b>${esc(tr('pairT'))}</b><span>${esc(tr('pairB'))}</span></div>
-      <div class="pb-code">${esc(code)}</div><button class="pb-copy" data-copy="${esc(code)}">${esc(tr('copy'))}</button>`;
+    if (box) { box.hidden = true; box.style.display = 'none'; }
+    return;
   }
 
   // ─── this page ────────────────────────────────────────────────────────────
@@ -287,17 +273,43 @@
       else if (a === 'disconnect') send({ action: 'hl.disconnect' }).then(r => (r && r.pending && confirm(tr('discLeft', r.pending)) ? send({ action: 'hl.disconnect', force: true }) : r)).then(() => { $('cloudMenu').classList.remove('open'); paintCloud(); });
       return;
     }
-    if (t.closest('#drawGo') || t.closest('[data-open="draw"]')) { openDraw(); return; }
+    // Clicks on the 6 Tiles (Image 1) - routes directly to the corresponding GitHub Pages page
+    // 1. GooDraw
+    if (t.closest('#drawTile') || t.closest('#drawGo') || t.closest('[data-open="draw"]')) {
+      if (typeof chrome !== 'undefined' && chrome.tabs && tab) {
+        openDraw();
+      } else {
+        openTab("https://daniellucas2025.github.io/goodraw/index.html");
+      }
+      return;
+    }
+    // 2. GooHighlights
     if (t.closest('#hlAllow')) { allowAll(); return; }
-    // The Highlights' corner buttons (only on pages with marks): away even there (highlights.js reads hlDockHide).
-    if (t.id === 'hlDockHide') { chrome.storage.local.set({ hlDockHide: t.checked }); return; }
-    if (t.closest('#hlGo') || t.closest('[data-open="hl"]')) { openHighlights(); return; }
-    // GooDraw Flashcards and Planner: their screens in the site's app.
-    if (t.closest("#fcGo")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#flashcards"); return; }
-    // The Notes: its page on the site (what it is, free and Premium), in a new tab, in the home's language.
-    if (t.closest("#notesGo") || t.closest('[data-open="notes"]')) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html"); return; }
-    if (t.closest("#plGo")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#planner"); return; }
-    if (t.closest("#android")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#app"); return; }
+    if (t.id === 'hlDockHide') { chrome?.storage?.local?.set({ hlDockHide: t.checked }); return; }
+    if (t.closest('#hlTile') || t.closest('#hlGo') || t.closest('[data-open="hl"]')) {
+      openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#grifos");
+      return;
+    }
+    // 3. GooNotes
+    if (t.closest('#notesTile') || t.closest('#notesGo') || t.closest('[data-open="notes"]')) {
+      openTab("https://daniellucas2025.github.io/goodraw/dashboard.html");
+      return;
+    }
+    // 4. Flashcards
+    if (t.closest('#fcTile') || t.closest('#fcGo')) {
+      openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#flashcards");
+      return;
+    }
+    // 5. Planner
+    if (t.closest('#plTile') || t.closest('#plGo')) {
+      openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#planner");
+      return;
+    }
+    // 6. App Android
+    if (t.closest('#andTile') || t.closest('#android')) {
+      openTab("https://daniellucas2025.github.io/goodraw/dashboard.html#app");
+      return;
+    }
     // Chamados: the Notes' form, with this page and the extension's version (background.js).
     if (t.closest("#ticketGo")) { openTab("https://daniellucas2025.github.io/goodraw/dashboard.html"); closeHome(); return; }
     const s = t.closest('[data-s]');

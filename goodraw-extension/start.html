@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GooDraw</title>
+<!-- The extension's own tab (start.js): GooHighlights' paged modal and
+     the "every site" permission, which a browser only asks from a click on an
+     extension page; and the welcome after installing (GooDraw as a whole:
+     the three tools and what is free). -->
+<style>
+  @font-face { font-family: 'Poppins'; font-weight: 500; src: url(fonts/poppins-500.woff2) format('woff2'); }
+  @font-face { font-family: 'Poppins'; font-weight: 700; src: url(fonts/poppins-700.woff2) format('woff2'); }
+  @font-face { font-family: 'Poppins'; font-weight: 800; src: url(fonts/poppins-800.woff2) format('woff2'); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { min-height: 100vh; background: radial-gradient(120% 80% at 50% 0%, #1b1b52 0%, #0e0e24 60%, #0b0b1e 100%); color: #fff;
+    font: 500 15px/1.55 'Poppins', 'Segoe UI', Roboto, Arial, sans-serif; display: grid; place-items: center; padding: 24px 16px; }
+  button { font: inherit; cursor: pointer; }
+  #view { width: 100%; display: grid; place-items: center; }
+  .logo { display: block; }
+  .card { width: min(560px, 100%); padding: 30px 30px 26px; border-radius: 26px; background: #15153a; box-shadow: 0 50px 120px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.08); }
+  .card.wide { width: min(980px, 100%); }
+  .logo { width: 64px; height: 64px; border-radius: 17px; box-shadow: 0 16px 40px -12px rgba(110,80,255,.8); }
+  .k { display: inline-block; margin-top: 16px; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #3b3200; background: #fde047; border-radius: 99px; padding: 5px 11px; }
+  h1 { margin: 12px 0 8px; font-size: clamp(24px, 4vw, 30px); line-height: 1.15; letter-spacing: -.02em; font-weight: 800; }
+  p { margin: 0 0 10px; color: rgba(255,255,255,.74); }
+  .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .b { min-height: 46px; padding: 10px 22px; border-radius: 23px; font-weight: 700; border: 1px solid rgba(255,255,255,.22); background: transparent; color: #fff; }
+  .b.go { border: 0; background: linear-gradient(135deg, #4a4aff, #8b3dff); box-shadow: 0 14px 30px -12px rgba(110,80,255,.9); }
+  .b:hover { filter: brightness(1.08); }
+  .tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0 6px; }
+  .tool { padding: 16px; border-radius: 18px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-top: 3px solid #8b3dff; }
+  .tool.draw { border-top-color: #e53935; } .tool.hl { border-top-color: #fde047; } .tool.notes { border-top-color: #4a4aff; }
+  .tool .th { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+  .tool b { font-size: 16px; line-height: 1.3; }
+  .tool em { flex-shrink: 0; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #3b3200; background: #fde047; border-radius: 99px; padding: 3px 9px; }
+  .tool.notes em { color: #fff; background: rgba(255,255,255,.16); }
+  .tool span { font-size: 13.5px; color: rgba(255,255,255,.74); }
+  .pin { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 14px 16px; border-radius: 16px; background: rgba(74,74,255,.18); border: 1px solid rgba(165,165,255,.35); font-size: 14px; }
+  .pin svg { flex-shrink: 0; width: 22px; height: 22px; margin-top: 2px; }
+  /* The welcome's question: what the icon opens. */
+  .ask { margin-top: 16px; }
+  .ask > b { display: block; margin-bottom: 8px; font-size: 15px; }
+  .ask small { display: block; margin-top: 8px; font-size: 12.5px; color: rgba(255,255,255,.55); }
+  .choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice button { text-align: left; padding: 14px 16px; border-radius: 16px; color: #fff; background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.14); }
+  .choice button b { display: block; font-size: 15px; }
+  .choice button span { display: block; margin-top: 2px; font-size: 13px; color: rgba(255,255,255,.7); }
+  .choice button.on { border-color: #8b3dff; background: rgba(139,61,255,.18); box-shadow: 0 0 0 3px rgba(139,61,255,.25); }
+  .choice button.on b::before { content: '✓ '; color: #c4b5fd; }
+  /* After "Entendi": what the permission for every site is for, then the browser's prompt. */
+  .scrim { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; padding: 24px 16px; background: rgba(5,5,20,.72); backdrop-filter: blur(4px); animation: fade .2s both; }
+  .scrim .card { animation: pop .25s cubic-bezier(.2,.8,.2,1) both; }
+  .why { list-style: none; margin: 14px 0 4px; padding: 0; display: grid; gap: 10px; }
+  .why li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: rgba(255,255,255,.82); }
+  .why svg { flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; color: #86efac; }
+  @keyframes fade { from { opacity: 0; } } @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+  @media (max-width: 760px) { .tools, .choice { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .card { padding: 22px 18px; } .b { flex: 1; } }
+</style>
+</head>
+<body>
+<main id="view"></main>
+<script src="highlights-promo.js"></script>
+<script src="start.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "GooDraw",
+    "description": "Extension name (same in all languages)."
+  },
+  "extDescription": {
+    "message": "Dibuja, resalta y toma notas en cualquier página web",
+    "description": "Short manifest description."
+  },
+  "actionTitle": {
+    "message": "GooDraw",
+    "description": "Tooltip of the extension button in the browser toolbar."
+  }
+}
