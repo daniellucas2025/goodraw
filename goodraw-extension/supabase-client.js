@@ -122,18 +122,17 @@
       }
     }
 
-    // ──────────────────────── DESENHOS / ANOTAÇÕES SOBRE QUESTÕES ────────────────────────
-    async saveDrawing(url, strokes, previewThumbnail = '') {
-      const cleanUrl = url.split('#')[0];
+    // ──────────────────────── DESENHOS & NOTAS DE TEXTO SOBRE QUESTÕES ────────────────────────
+    async saveDrawing(url, drawingData, previewThumbnail = '') {
+      const cleanUrl = (url || '').split('#')[0];
       const payload = {
         url: cleanUrl,
-        strokes: strokes,
+        strokes: drawingData,
         preview_thumbnail: previewThumbnail,
         user_id: this.session?.user?.id || null,
         updated_at: new Date().toISOString()
       };
 
-      // Sempre guarda um cache local para acesso offline instantâneo
       try {
         const localCacheKey = 'goodraw_ink_' + cleanUrl;
         if (typeof localStorage !== 'undefined') localStorage.setItem(localCacheKey, JSON.stringify(payload));
@@ -141,18 +140,42 @@
 
       if (!this.isConfigured()) return { local: true, offline: true };
 
-      // Se configurado, sobe para o Supabase
-      const res = await fetch(`${this.config.url}/rest/v1/drawings`, {
-        method: 'POST',
-        headers: Object.assign(this.getAuthHeader(), { 'Prefer': 'resolution=merge-duplicates,return=representation' }),
-        body: JSON.stringify(payload)
-      });
-      return await res.json();
+      try {
+        // Tenta verificar se já existe registro para atualizar via PATCH
+        const checkRes = await fetch(`${this.config.url}/rest/v1/drawings?url=eq.${encodeURIComponent(cleanUrl)}&select=id&limit=1`, {
+          headers: this.getAuthHeader()
+        });
+        if (checkRes.ok) {
+          const existing = await checkRes.json();
+          if (existing && existing.length > 0) {
+            const updateRes = await fetch(`${this.config.url}/rest/v1/drawings?id=eq.${existing[0].id}`, {
+              method: 'PATCH',
+              headers: this.getAuthHeader(),
+              body: JSON.stringify({
+                strokes: drawingData,
+                preview_thumbnail: previewThumbnail,
+                updated_at: new Date().toISOString()
+              })
+            });
+            if (updateRes.ok) return await updateRes.json();
+          }
+        }
+
+        // Caso não exista, cria novo registro
+        const res = await fetch(`${this.config.url}/rest/v1/drawings`, {
+          method: 'POST',
+          headers: this.getAuthHeader(),
+          body: JSON.stringify(payload)
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[SupabaseSync] Erro ao sincronizar desenho:', e);
+        return payload;
+      }
     }
 
     async getDrawing(url) {
-      const cleanUrl = url.split('#')[0];
-      // Tenta obter do cache local primeiro
+      const cleanUrl = (url || '').split('#')[0];
       let cached = null;
       try {
         const local = localStorage.getItem('goodraw_ink_' + cleanUrl);
@@ -170,52 +193,26 @@
           if (list && list.length > 0) return list[0];
         }
       } catch (e) {
-        console.warn('[SupabaseSync] Falha ao buscar na nuvem, usando cache local:', e);
+        console.warn('[SupabaseSync] Falha ao buscar desenho na nuvem:', e);
       }
       return cached;
     }
 
     // ──────────────────────── PRINTS & CAPTURAS DE TELA ────────────────────────
     async saveScreenshot({ url, title, imageDataUrl, note = '', tags = [], isErrorNotebook = true, difficulty = 'media' }) {
-      let finalImageUrl = imageDataUrl;
-
-      // Se estiver online com Supabase configurado, podemos salvar no Storage Bucket
-      if (this.isConfigured() && imageDataUrl.startsWith('data:image')) {
-        try {
-          const filename = `shot_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-          const base64Content = imageDataUrl.split(',')[1];
-          const blob = this.base64ToBlob(base64Content, 'image/png');
-
-          const uploadRes = await fetch(`${this.config.url}/storage/v1/object/${this.config.bucket}/${filename}`, {
-            method: 'POST',
-            headers: {
-              'apikey': this.config.anonKey,
-              'Authorization': `Bearer ${this.session?.access_token || this.config.anonKey}`,
-              'Content-Type': 'image/png'
-            },
-            body: blob
-          });
-          if (uploadRes.ok) {
-            finalImageUrl = `${this.config.url}/storage/v1/object/public/${this.config.bucket}/${filename}`;
-          }
-        } catch (err) {
-          console.warn('[SupabaseSync] Falha no upload ao storage, mantendo dataUrl:', err);
-        }
-      }
-
+      const cleanUrl = (url || '').split('#')[0];
       const record = {
-        url: url || '',
+        url: cleanUrl,
         title: title || 'Recorte de Questão',
-        image_url: finalImageUrl,
+        image_url: imageDataUrl,
         note: note || '',
         tags: tags || [],
-        is_error_notebook: isErrorNotebook,
+        is_error_notebook: Boolean(isErrorNotebook),
         difficulty: difficulty,
         user_id: this.session?.user?.id || null,
         created_at: new Date().toISOString()
       };
 
-      // Salva no cache local
       this.saveLocalScreenshot(record);
 
       if (!this.isConfigured()) return record;
@@ -226,29 +223,41 @@
           headers: this.getAuthHeader(),
           body: JSON.stringify(record)
         });
-        return await res.json();
+        if (res.ok) {
+          const data = await res.json();
+          return Array.isArray(data) && data.length > 0 ? data[0] : record;
+        }
       } catch (e) {
-        console.warn('[SupabaseSync] Erro ao sincronizar print na nuvem:', e);
-        return record;
+        console.warn('[SupabaseSync] Erro ao salvar screenshot no Supabase:', e);
       }
+      return record;
     }
 
     async listScreenshots(options = {}) {
-      const { isErrorNotebook = null, limit = 50 } = options;
-      if (!this.isConfigured()) return this.getLocalScreenshots(options);
+      const { isErrorNotebook = null, limit = 100 } = options;
+      const localList = this.getLocalScreenshots(options);
+
+      if (!this.isConfigured()) return localList;
 
       try {
         let endpoint = `${this.config.url}/rest/v1/screenshots?select=*&order=created_at.desc&limit=${limit}`;
-        if (isErrorNotebook !== null) endpoint += `&is_error_notebook=eq.${isErrorNotebook}`;
+        if (isErrorNotebook !== null && isErrorNotebook !== undefined) {
+          endpoint += `&is_error_notebook=eq.${Boolean(isErrorNotebook)}`;
+        }
         const res = await fetch(endpoint, { headers: this.getAuthHeader() });
         if (res.ok) {
-          const items = await res.json();
-          return items.length > 0 ? items : this.getLocalScreenshots(options);
+          const cloudItems = await res.json();
+          const map = new Map();
+          cloudItems.forEach(item => map.set(item.id, item));
+          localList.forEach(item => {
+            if (!map.has(item.id)) map.set(item.id || item.created_at, item);
+          });
+          return Array.from(map.values());
         }
       } catch (e) {
         console.warn('[SupabaseSync] Erro ao listar prints da nuvem:', e);
       }
-      return this.getLocalScreenshots(options);
+      return localList;
     }
 
     async deleteScreenshot(idOrCreated) {
@@ -312,8 +321,9 @@
 
     // ──────────────────────── GRIFOS & HIGHLIGHTS ────────────────────────
     async saveHighlight({ url, quote, color = 'yellow', note = '', anchorData = {} }) {
+      const cleanUrl = (url || '').split('#')[0];
       const record = {
-        url: url.split('#')[0],
+        url: cleanUrl,
         quote,
         color,
         note,
@@ -321,6 +331,14 @@
         user_id: this.session?.user?.id || null,
         created_at: new Date().toISOString()
       };
+
+      try {
+        const key = 'goodraw_local_highlights';
+        let list = JSON.parse(localStorage.getItem(key) || '[]');
+        list.unshift(record);
+        if (list.length > 100) list.pop();
+        localStorage.setItem(key, JSON.stringify(list));
+      } catch (e) {}
 
       if (!this.isConfigured()) return record;
 
@@ -330,24 +348,41 @@
           headers: this.getAuthHeader(),
           body: JSON.stringify(record)
         });
-        return await res.json();
+        if (res.ok) {
+          const saved = await res.json();
+          return saved && saved.length > 0 ? saved[0] : record;
+        }
       } catch (e) {
-        console.warn('[SupabaseSync] Erro ao salvar highlight:', e);
-        return record;
+        console.warn('[SupabaseSync] Erro ao salvar highlight na nuvem:', e);
       }
+      return record;
     }
 
     async listHighlights(url = '') {
-      if (!this.isConfigured()) return [];
+      let localList = [];
       try {
-        let endpoint = `${this.config.url}/rest/v1/highlights?select=*&order=created_at.desc`;
+        localList = JSON.parse(localStorage.getItem('goodraw_local_highlights') || '[]');
+      } catch (e) {}
+
+      if (!this.isConfigured()) return localList;
+
+      try {
+        let endpoint = `${this.config.url}/rest/v1/highlights?select=*&order=created_at.desc&limit=100`;
         if (url) endpoint += `&url=eq.${encodeURIComponent(url.split('#')[0])}`;
         const res = await fetch(endpoint, { headers: this.getAuthHeader() });
-        if (res.ok) return await res.json();
+        if (res.ok) {
+          const cloudItems = await res.json();
+          const map = new Map();
+          cloudItems.forEach(item => map.set(item.id, item));
+          localList.forEach(item => {
+            if (!map.has(item.id)) map.set(item.id || item.created_at, item);
+          });
+          return Array.from(map.values());
+        }
       } catch (e) {
         console.warn('[SupabaseSync] Erro ao listar highlights:', e);
       }
-      return [];
+      return localList;
     }
 
     // ──────────────────────── HELPERS & LOCAL STORAGE ────────────────────────
@@ -441,26 +476,62 @@
 
     async listErrorQuestions(filters = {}) {
       const key = 'goodraw_caderno_erros';
-      let list = JSON.parse(localStorage.getItem(key) || '[]');
+      let localList = JSON.parse(localStorage.getItem(key) || '[]');
+
+      let cloudList = [];
+      if (this.isConfigured()) {
+        try {
+          const res = await fetch(`${this.config.url}/rest/v1/study_notes?tags=cs.{caderno_erros}&select=*&order=created_at.desc&limit=100`, {
+            headers: this.getAuthHeader()
+          });
+          if (res.ok) {
+            const notes = await res.json();
+            cloudList = notes.map(n => {
+              try {
+                const parsed = JSON.parse(n.content);
+                parsed.cloud_id = n.id;
+                return parsed;
+              } catch (e) {
+                return {
+                  id: n.id,
+                  title: n.title.replace('[ERRO] ', ''),
+                  disciplina: n.subject,
+                  created_at: n.created_at
+                };
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('[SupabaseSync] Erro ao buscar caderno de erros na nuvem:', e);
+        }
+      }
+
+      const map = new Map();
+      cloudList.forEach(item => map.set(item.id || item.cloud_id, item));
+      localList.forEach(item => {
+        if (!map.has(item.id)) map.set(item.id, item);
+      });
+      let combined = Array.from(map.values());
+
       if (filters.banca && filters.banca !== 'todas') {
-        list = list.filter(q => (q.banca || '').toLowerCase() === filters.banca.toLowerCase());
+        combined = combined.filter(q => (q.banca || '').toLowerCase() === filters.banca.toLowerCase());
       }
       if (filters.disciplina && filters.disciplina !== 'todas') {
-        list = list.filter(q => (q.disciplina || '').toLowerCase() === filters.disciplina.toLowerCase());
+        combined = combined.filter(q => (q.disciplina || '').toLowerCase() === filters.disciplina.toLowerCase());
       }
       if (filters.error_reason && filters.error_reason !== 'todos') {
-        list = list.filter(q => (q.error_reason || '').toLowerCase() === filters.error_reason.toLowerCase());
+        combined = combined.filter(q => (q.error_reason || '').toLowerCase() === filters.error_reason.toLowerCase());
       }
       if (filters.status === 'pendente') {
-        list = list.filter(q => !q.is_resolved);
+        combined = combined.filter(q => !q.is_resolved);
       } else if (filters.status === 'resolvido') {
-        list = list.filter(q => q.is_resolved);
+        combined = combined.filter(q => q.is_resolved);
       }
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        list = list.filter(q => (q.title + ' ' + (q.statement||'') + ' ' + (q.explanation||'')).toLowerCase().includes(s));
+        combined = combined.filter(q => ((q.title||'') + ' ' + (q.statement||'') + ' ' + (q.explanation||'')).toLowerCase().includes(s));
       }
-      return list;
+      return combined;
     }
 
     async toggleErrorQuestionStatus(id) {
@@ -524,11 +595,41 @@
 
     async listFlashcards(subject = '') {
       const key = 'goodraw_flashcards';
-      let list = JSON.parse(localStorage.getItem(key) || '[]');
-      if (subject && subject !== 'todos') {
-        list = list.filter(c => (c.subject || '').toLowerCase() === subject.toLowerCase());
+      let localList = JSON.parse(localStorage.getItem(key) || '[]');
+
+      let cloudList = [];
+      if (this.isConfigured()) {
+        try {
+          const res = await fetch(`${this.config.url}/rest/v1/study_notes?tags=cs.{flashcard}&select=*&order=created_at.desc&limit=100`, {
+            headers: this.getAuthHeader()
+          });
+          if (res.ok) {
+            const notes = await res.json();
+            cloudList = notes.map(n => {
+              try {
+                const parsed = JSON.parse(n.content);
+                parsed.cloud_id = n.id;
+                return parsed;
+              } catch (e) {
+                return { id: n.id, front: n.title, back: n.content, subject: n.subject };
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('[SupabaseSync] Erro ao buscar flashcards na nuvem:', e);
+        }
       }
-      return list;
+
+      const map = new Map();
+      cloudList.forEach(item => map.set(item.id || item.cloud_id, item));
+      localList.forEach(item => {
+        if (!map.has(item.id)) map.set(item.id, item);
+      });
+      let combined = Array.from(map.values());
+      if (subject && subject !== 'todos') {
+        combined = combined.filter(c => (c.subject || '').toLowerCase() === subject.toLowerCase());
+      }
+      return combined;
     }
 
     async reviewFlashcard(id, quality) {

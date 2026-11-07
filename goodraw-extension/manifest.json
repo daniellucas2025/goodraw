@@ -10,15 +10,19 @@
     "storage",
     "alarms"
   ],
+  "host_permissions": [
+    "https://*.supabase.co/*",
+    "*://*/*"
+  ],
   "optional_host_permissions": [
-    "*://*/*",
     "<all_urls>"
   ],
   "externally_connectable": {
     "matches": [
       "*://localhost/*",
       "*://127.0.0.1/*",
-      "https://*.supabase.co/*"
+      "https://*.supabase.co/*",
+      "https://*.github.io/*"
     ]
   },
   "content_security_policy": {

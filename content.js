@@ -2459,6 +2459,7 @@
   textLayer.id = '__pd_text_layer__';
   textLayer.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:2147483641;`;
   root.appendChild(textLayer);
+  setTimeout(_loadCloudDrawing, 350);
 
   // ─── RESIZE LOGIC ─────────────────────────────────────────────────────────
   const syncSize = () => {
@@ -2698,6 +2699,98 @@
     baseSnap = snapBase();
     // The lasso's box on top, out of the cached image (a preview restores it).
     if (sel && tool === 'lasso') drawSel();
+    if (!includeStroke) _queueCloudDrawingSync();
+  }
+
+  function getPostItsData() {
+    const list = [];
+    if (!textLayer) return list;
+    textLayer.querySelectorAll('.pd-postit').forEach(p => {
+      const body = p.querySelector('.postit-body');
+      list.push({
+        x: parseFloat(p.dataset.x || p.style.left) || 0,
+        y: parseFloat(p.dataset.y || p.style.top) || 0,
+        w: p.offsetWidth || 240,
+        h: p.offsetHeight || 120,
+        bg: p.dataset.bg || p.style.background || '#fef08a',
+        border: p.dataset.border || '#facc15',
+        text: body ? body.value : ''
+      });
+    });
+    return list;
+  }
+
+  function restorePostItsData(list) {
+    if (!Array.isArray(list) || !textLayer) return;
+    textLayer.innerHTML = '';
+    list.forEach(item => {
+      spawnPostIt(item.x, item.y, item);
+    });
+  }
+
+  let _cloudSyncDebounce = 0;
+  function _queueCloudDrawingSync() {
+    clearTimeout(_cloudSyncDebounce);
+    _cloudSyncDebounce = setTimeout(() => {
+      try {
+        const postits = getPostItsData();
+        const drawingData = {
+          strokes: strokes,
+          postits: postits
+        };
+        if ((strokes && strokes.length > 0) || (postits && postits.length > 0)) {
+          // 1. Enviar para background.js para persistência garantida na nuvem sem bloqueio de CSP
+          if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+            chrome.runtime.sendMessage({
+              action: 'cloud.saveDrawing',
+              url: window.location.href,
+              drawingData: drawingData
+            }).catch(() => {});
+          }
+          // 2. Também salvar via SupabaseSyncService
+          if (typeof SupabaseSyncService !== 'undefined') {
+            SupabaseSyncService.saveDrawing(window.location.href, drawingData);
+          }
+          console.log('[GooDraw Cloud] Marcações e notas de texto salvas na nuvem com sucesso!');
+        }
+      } catch (e) {
+        console.warn('[GooDraw Cloud] Erro ao sincronizar desenho:', e);
+      }
+    }, 800);
+  }
+
+  function _loadCloudDrawing() {
+    const applyDrawing = saved => {
+      if (!saved) return;
+      const data = saved.strokes;
+      if (!data) return;
+      if (Array.isArray(data)) {
+        if (data.length > 0 && strokes.length === 0) {
+          strokes = data;
+          renderAllStrokes();
+        }
+      } else if (typeof data === 'object') {
+        if (Array.isArray(data.strokes) && data.strokes.length > 0 && strokes.length === 0) {
+          strokes = data.strokes;
+          renderAllStrokes();
+        }
+        if (Array.isArray(data.postits) && data.postits.length > 0 && textLayer.querySelectorAll('.pd-postit').length === 0) {
+          restorePostItsData(data.postits);
+        }
+      }
+      console.log('[GooDraw Cloud] Marcações e notas de texto restauradas com sucesso!');
+    };
+
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage({ action: 'cloud.getDrawing', url: window.location.href }, res => {
+        if (res && res.drawing) applyDrawing(res.drawing);
+        else if (typeof SupabaseSyncService !== 'undefined') {
+          SupabaseSyncService.getDrawing(window.location.href).then(applyDrawing);
+        }
+      });
+    } else if (typeof SupabaseSyncService !== 'undefined') {
+      SupabaseSyncService.getDrawing(window.location.href).then(applyDrawing);
+    }
   }
 
   // ─── LASSO ───────────────────────────────────────────────────────────────
@@ -5221,7 +5314,7 @@
       postit.dataset.x = newX;
       postit.dataset.y = newY;
     }, SIG);
-    document.addEventListener('mouseup', () => { dragging = false; }, SIG);
+    document.addEventListener('mouseup', () => { if (dragging) { dragging = false; _queueCloudDrawingSync(); } }, SIG);
   }
 
   function setupPostItResize(postit, handle) {
@@ -5242,12 +5335,12 @@
       postit.style.width = w + 'px';
       postit.style.height = h + 'px';
     }, SIG);
-    document.addEventListener('mouseup', () => { resizing = false; }, SIG);
+    document.addEventListener('mouseup', () => { if (resizing) { resizing = false; _queueCloudDrawingSync(); } }, SIG);
   }
 
-  function spawnPostIt(x, y) {
+  function spawnPostIt(x, y, restoredData) {
     pushH();
-    const piColor = getNextPostItColor();
+    const piColor = (restoredData && restoredData.bg) ? { bg: restoredData.bg, border: restoredData.border } : getNextPostItColor();
 
     const postit = document.createElement('div');
     postit.className = 'pd-text-node pd-postit';
@@ -5258,6 +5351,8 @@
     postit.style.left = x + 'px';
     postit.style.top = y + 'px';
     postit.style.background = piColor.bg;
+    if (restoredData && restoredData.w) postit.style.width = restoredData.w + 'px';
+    if (restoredData && restoredData.h) postit.style.height = restoredData.h + 'px';
 
     // Header (drag handle + close)
     const header = document.createElement('div');
@@ -5272,6 +5367,7 @@
       e.stopPropagation();
       pushH();
       postit.remove();
+      _queueCloudDrawingSync();
     });
     header.appendChild(closeBtn);
     postit.appendChild(header);
@@ -5280,11 +5376,17 @@
     const body = document.createElement('textarea');
     body.className = 'postit-body';
     body.placeholder = tr('note.placeholder');
+    if (restoredData && restoredData.text) {
+      body.value = restoredData.text;
+      body.textContent = restoredData.text;
+    }
     body.addEventListener('mousedown', e => e.stopPropagation());
     body.addEventListener('click', e => e.stopPropagation());
     body.addEventListener('keydown', e => e.stopPropagation());
-    // What the history keeps is the markup: the text typed goes into it too.
-    body.addEventListener('input', () => { body.textContent = body.value; });
+    body.addEventListener('input', () => {
+      body.textContent = body.value;
+      _queueCloudDrawingSync();
+    });
     postit.appendChild(body);
 
     // Resize handle
@@ -5299,8 +5401,10 @@
     setupPostItDrag(postit, header);
     setupPostItResize(postit, resizeHandle);
 
-    // Focus the textarea
-    setTimeout(() => body.focus(), 50);
+    if (!restoredData) {
+      setTimeout(() => body.focus(), 50);
+      _queueCloudDrawingSync();
+    }
   }
 
   // ─── KEY SIMULATION ───────────────────────────────────────────────────────
@@ -6032,6 +6136,19 @@
           // download, while the drag that chose the area still counts as the
           // user's gesture (the clipboard refuses writes without one).
           const png = out.toDataURL('image/png');
+          const shotPayload = {
+            url: window.location.href,
+            title: document.title || 'Recorte de Questão',
+            imageDataUrl: png,
+            note: 'Capturado via GooDraw',
+            isErrorNotebook: Boolean(region)
+          };
+          if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+            chrome.runtime.sendMessage({ action: 'cloud.saveScreenshot', shot: shotPayload }).catch(() => {});
+          }
+          if (typeof SupabaseSyncService !== 'undefined') {
+            SupabaseSyncService.saveScreenshot(shotPayload).catch(() => {});
+          }
           if (region) copyShot(png).then(ok => { if (ok) showToast(COPIED_MSG, { x, y, w, h }); });
           // An area: it can also go into the caderno de erros (highlights.js, same page).
           // That modal has its own "Baixar", so then nothing is saved by itself

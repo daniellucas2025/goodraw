@@ -365,6 +365,11 @@ async function hlInkSave({ url, info, ink }) {
   const it = cleanInk(ink);
   if (!it.id) delete it.id;
   const saved = await NotesDB.putInk({ ...it, id: it.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)), page: page.id });
+  try {
+    if (typeof SupabaseSyncService !== 'undefined') {
+      SupabaseSyncService.saveDrawing(url, ink);
+    }
+  } catch (e) {}
   return { ok: true, ink: saved, page: await NotesDB.getWebpage(page.id) };
 }
 async function hlSave({ url, info, mark }) {
@@ -372,6 +377,19 @@ async function hlSave({ url, info, mark }) {
   const id = typeof mark.id === 'string' && /^[\w-]{6,40}$/.test(mark.id) ? mark.id : undefined;
   const m = await NotesDB.putMark({ ...cleanMark(mark), id, page: page.id });
   toNotesPages({ action: 'notesChanged' });
+  try {
+    if (typeof SupabaseSyncService !== 'undefined') {
+      SupabaseSyncService.saveHighlight({
+        url: url,
+        quote: (m.name ? `[${m.name}] ` : '') + (m.anchor?.exact || 'Trecho grifado'),
+        color: m.color || 'yellow',
+        note: m.note || '',
+        anchorData: m.anchor || {}
+      });
+    }
+  } catch (e) {
+    console.warn('[GooDraw Cloud] Erro ao sincronizar grifo:', e);
+  }
   return { ok: true, page: await NotesDB.getWebpage(page.id), mark: m };
 }
 async function hlUpdate(id, patch) {
@@ -582,6 +600,63 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     openNotes(typeof request.notebookId === 'string' ? request.notebookId : null);
     return;
   }
+  // ─── GOO DRAW CLOUD SYNC (SUPABASE DIRECT DISPATCHER) ───
+  if (request.action === 'cloud.saveDrawing') {
+    (async () => {
+      try {
+        const res = await SupabaseSyncService.saveDrawing(request.url, request.drawingData);
+        sendResponse({ ok: true, data: res });
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+  if (request.action === 'cloud.getDrawing') {
+    (async () => {
+      try {
+        const drawing = await SupabaseSyncService.getDrawing(request.url);
+        sendResponse({ ok: true, drawing });
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+  if (request.action === 'cloud.saveScreenshot') {
+    (async () => {
+      try {
+        const res = await SupabaseSyncService.saveScreenshot(request.shot);
+        sendResponse({ ok: true, data: res });
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+  if (request.action === 'cloud.saveHighlight') {
+    (async () => {
+      try {
+        const res = await SupabaseSyncService.saveHighlight(request.highlight);
+        sendResponse({ ok: true, data: res });
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+  if (request.action === 'cloud.saveErrorQuestion') {
+    (async () => {
+      try {
+        const res = await SupabaseSyncService.saveErrorQuestion(request.question);
+        sendResponse({ ok: true, data: res });
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
   // Minhas marcações (highlights.js on a page, marks.js in the Notes).
   if (typeof request.action === 'string' && request.action.startsWith('hl.')) {
     const fail = e => { console.error('Marcações:', e); sendResponse({ ok: false }); };
@@ -693,6 +768,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // selection menu's "Enviar trecho"; its HTML only with the formatting).
       case 'hl.errAdd': {
         if (typeof request.folder !== 'string') return;
+        try {
+          if (typeof SupabaseSyncService !== 'undefined') {
+            if (request.dataUrl) {
+              SupabaseSyncService.saveScreenshot({
+                url: url || request.url,
+                title: request.title || 'Caderno de Erros',
+                imageDataUrl: request.dataUrl,
+                note: request.note || '',
+                isErrorNotebook: true
+              });
+              SupabaseSyncService.saveErrorQuestion({
+                title: request.title || 'Questão Salva',
+                banca: 'Geral',
+                statement: request.note || '',
+                screenshot_url: request.dataUrl
+              });
+            } else if (request.text) {
+              SupabaseSyncService.saveErrorQuestion({
+                title: request.title || 'Trecho Salvo',
+                banca: 'Geral',
+                statement: request.text,
+                explanation: request.note || ''
+              });
+            }
+          }
+        } catch (e) {}
         if (typeof request.dataUrl !== 'string' && typeof request.text === 'string') {
           const text = request.text.trim().slice(0, 5000);
           if (!text) return;

@@ -3113,7 +3113,10 @@ bn-mark[data-q][data-last]:not([data-hide])::after{content:"”";font-weight:700
       const rect = r; end();
       if (!rect || rect.w < 8 || rect.h < 8) return;
       const shot = await grab(rect);
-      if (shot) capOffer(shot, rect.w, rect.h, { own: true });
+      if (shot) {
+        send({ action: 'cloud.saveScreenshot', shot: { url: pageUrl(), title: document.title || 'Recorte de Questão', imageDataUrl: shot, isErrorNotebook: true } }).catch(() => {});
+        capOffer(shot, rect.w, rect.h, { own: true });
+      }
       // The browser wants the permission for every address (asked on hl.html).
       else if (capPerm && !TOUCH) toastAction(tr('errCapPerm'), tr('errCapAllow'), () => send({ action: 'hl.openAccess' }));
       else toast(tr('errCapFail'));
