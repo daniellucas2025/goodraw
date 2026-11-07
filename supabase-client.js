@@ -5,10 +5,10 @@
 (function (global) {
   'use strict';
 
-  // Configuração padrão que pode ser sobrescrita via settings ou storage local
+  // Configuração padrão conectada ao Supabase Cloud do usuário
   const DEFAULT_CONFIG = {
-    url: 'https://xyzcompany.supabase.co', // Substitua pela URL do seu projeto
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', // Substitua pela sua Chave Anon
+    url: 'https://frwnoteybuadmnkultoh.supabase.co',
+    anonKey: 'sb_publishable_oR15v6U20AsAsKm2eBfCsg_73hGR90b',
     bucket: 'study_screenshots'
   };
 
